@@ -2108,11 +2108,7 @@ var CMAuth = (function(){
     function prefixFor(u){ return u && u.legacy ? '' : 'cmu_' + (u?u.code:'x') + '__'; }
     function curUser(){ var c=window.__CM_USER; return db().users.filter(function(u){return u.code===c;})[0] || null; }
 
-    async function signup(name, code, pw){
-        code = toEn(code).trim();
-        if(!validCode(code)) throw new Error('کد ملی وارد شده معتبر نیست.');
-        if((pw||'').length<6) throw new Error('رمز عبور باید حداقل ۶ کاراکتر باشد.');
-    async function signup(name, code, pw){
+        async function signup(name, code, pw){
         code = toEn(code).trim();
         if(!validCode(code)) throw new Error('کد ملی وارد شده معتبر نیست.');
         if((pw||'').length<6) throw new Error('رمز عبور باید حداقل ۶ کاراکتر باشد.');
@@ -2121,10 +2117,6 @@ var CMAuth = (function(){
         var allowed = await isLicenseAllowed(code);
         if(!allowed) throw new Error('این کد ملی مجوز استفاده از نسخهٔ معاون را ندارد. با پشتیبانی تماس بگیرید.');
 
-        var d=db();
-        if(d.users.some(function(u){return u.code===code;})) throw new Error('برای این کد ملی قبلاً حساب ساخته شده است. وارد شوید.');
-        ...
-    }
         var d=db();
         if(d.users.some(function(u){return u.code===code;})) throw new Error('برای این کد ملی قبلاً حساب ساخته شده است. وارد شوید.');
         var alg = hasSubtle() ? 'pbkdf2' : 'sha256js', salt = randSalt();
