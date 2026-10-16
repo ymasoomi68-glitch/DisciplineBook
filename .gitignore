@@ -1,0 +1,6 @@
+license-tools/
+backups/
+*.bat
+PROJECT-INFO.txt
+new-codes.txt
+node_modules/
