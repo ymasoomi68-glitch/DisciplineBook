@@ -2137,6 +2137,8 @@ var CMAuth = (function(){
 
     function hasLegacyData(){ try { for(var i=0;i<real.length;i++){ var k=real.key(i); if(k && k.indexOf('cm_')===0 && k!=='cm_theme' && k!=='cm_active_page') return true; } } catch(e){} return false; }
     function prefixFor(u){ return u && u.legacy ? '' : 'cmu_' + (u?u.code:'x') + '__'; }
+    function db(){ try { var d=JSON.parse(real.getItem(K)||'null'); if(d&&d.users) return d; } catch(e){} return {users:[]}; }
+    function saveDb(d){ real.setItem(K, JSON.stringify(d)); }
     function curUser(){ var c=window.__CM_USER; return db().users.filter(function(u){return u.code===c;})[0] || null; }
 
         async function signup(name, code, pw){
