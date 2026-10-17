@@ -12,9 +12,9 @@
     "manifest-teacher.json"
   ],
   "sha256": {
-    "index.html": "e8d5b0e201b4060aaeb00e6b0bddb941778721f8c9b0a2f17b2bf21262688ba3",
+    "index.html": "2dcf15200d49054a1fe236e9f9cae4d506287eb113f78ee5bfe1bde2862125b3",
     "teacher.html": "3fea93bcfeb8c8b20ecd3875efc03482267a0e48a32368c2ae93a40f1eb02651",
-    "sw.js": "a820a9b32d327f8e880f9395f6dcb1c920fc6e9108352563daee450b7ec76811",
+    "sw.js": "8d7f9c41bdafaff3332f0baa21678e7b8e60ad42a063ab8d4dca853cdee38ec2",
     "manifest.json": "d58ead88489a2b786cbe68165e9e4b0bafc325a35d65b611699800330d2daa31",
     "manifest-teacher.json": "f86a18047a0e754acbf83a1150e2bbb00e55282f2927bdde45e6009c722cda87"
   },
