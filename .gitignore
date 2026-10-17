@@ -4,3 +4,8 @@ backups/
 PROJECT-INFO.txt
 new-codes.txt
 node_modules/
+bump-cache.js
+bump-version.js
+get-cache.js
+get-version.js
+sida-bookmarklet.html
