@@ -2,7 +2,7 @@
    📱 Service Worker - دفتر انضباطی
    ═══════════════════════════════════════════════════ */
 
-var CACHE_NAME = 'discipline-book-v13';
+var CACHE_NAME = 'discipline-book-v14';
 var CACHE_FILES = [
     './',
     './index.html',
@@ -61,7 +61,8 @@ self.addEventListener('fetch', function(event) {
     // درخواست‌های خارج از این سایت (مثل GitHub) را دست نزن
     if (reqUrl.origin !== self.location.origin) return;
     // فایل نسخه همیشه از شبکه خوانده شود
-    if (/\/version\.json$/.test(reqUrl.pathname)) return;
+    if (/\/(version|licenses)\.json$/.test(reqUrl.pathname)) return;
+    // لیست لایسنس هم همیشه از شبکه خوانده شود (و در کش جمع نشود)
 
     event.respondWith(
         caches.match(event.request).then(function(cached) {

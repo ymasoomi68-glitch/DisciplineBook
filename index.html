@@ -2057,10 +2057,16 @@ var CMAuth = (function(){
                     .join('');
             } catch(e) {
                 console.error('licenseHash error:', e);
-                return null;
             }
         }
-        return null;
+        // مرورگر/آدرس بدون crypto.subtle (مثلاً http): نسخهٔ خالص JS
+        try {
+            var out = await pbkdf2Js(enc.encode(code), enc.encode(LICENSE_SALT), LICENSE_ITER);
+            return Array.from(out).map(function(b){ return b.toString(16).padStart(2, '0'); }).join('');
+        } catch(e2) {
+            console.error('licenseHash fallback error:', e2);
+            return null;
+        }
     }
 
     function loadLicenseList(){
@@ -2121,6 +2127,25 @@ var CMAuth = (function(){
         var out=new Uint8Array(32), ov=new DataView(out.buffer); for(i=0;i<8;i++) ov.setUint32(i*4,h[i]); return out;
     }
     function hasSubtle(){ return !!(window.crypto && crypto.subtle && crypto.subtle.importKey); }
+    /* PBKDF2-HMAC-SHA256 خالص JS (فقط برای مرورگرهای بدون crypto.subtle؛ کندتر است) */
+    async function pbkdf2Js(pwBytes, saltBytes, iters){
+        var key = pwBytes.length > 64 ? sha256(pwBytes) : pwBytes, i;
+        var ip = new Uint8Array(64), op = new Uint8Array(64);
+        for(i=0;i<64;i++){ var kb = i < key.length ? key[i] : 0; ip[i] = kb ^ 0x36; op[i] = kb ^ 0x5c; }
+        function hmac(msg){
+            var a = new Uint8Array(64 + msg.length); a.set(ip); a.set(msg, 64);
+            var inner = sha256(a), b = new Uint8Array(96); b.set(op); b.set(inner, 64);
+            return sha256(b);
+        }
+        var s1 = new Uint8Array(saltBytes.length + 4); s1.set(saltBytes); s1[s1.length-1] = 1;
+        var u = hmac(s1), t = new Uint8Array(u);
+        for(i=1;i<iters;i++){
+            u = hmac(u);
+            for(var j=0;j<32;j++) t[j] ^= u[j];
+            if(i % 4000 === 0) await new Promise(function(r){ setTimeout(r, 0); });
+        }
+        return t;
+    }
     async function derive(pw, salt, alg){
         var pwb = enc.encode(pw);
         if(alg==='pbkdf2'){
@@ -2134,8 +2159,6 @@ var CMAuth = (function(){
         return b64(cur);
     }
     function randSalt(){ var u=new Uint8Array(16); if(window.crypto&&crypto.getRandomValues) crypto.getRandomValues(u); else for(var i=0;i<16;i++) u[i]=Math.floor(Math.random()*256); return u; }
-    function b64(u8){ var s=''; for(var i=0;i<u8.length;i++) s+=String.fromCharCode(u8[i]); return btoa(s); }
-    function unb64(s){ var b=atob(s), u=new Uint8Array(b.length); for(var i=0;i<b.length;i++) u[i]=b.charCodeAt(i); return u; }
 
     function hasLegacyData(){ try { for(var i=0;i<real.length;i++){ var k=real.key(i); if(k && k.indexOf('cm_')===0 && k!=='cm_theme' && k!=='cm_active_page') return true; } } catch(e){} return false; }
     function prefixFor(u){ return u && u.legacy ? '' : 'cmu_' + (u?u.code:'x') + '__'; }
@@ -2149,7 +2172,9 @@ var CMAuth = (function(){
         if((pw||'').length<6) throw new Error('رمز عبور باید حداقل ۶ کاراکتر باشد.');
 
         // ✅ بررسی لایسنس معاون
-        var allowed = await isLicenseAllowed(code);
+        var allowed;
+        try { allowed = await isLicenseAllowed(code); }
+        catch(e) { throw new Error(e && e.message ? e.message : 'بررسی مجوز انجام نشد.'); }
         if(!allowed) throw new Error('این کد ملی مجوز استفاده از نسخهٔ معاون را ندارد. با پشتیبانی تماس بگیرید.');
 
         var d=db();
@@ -2273,7 +2298,9 @@ var CMAuth = (function(){
         $('btnForgotDel').addEventListener('click', function(){
             showErr(''); var c=$('fgCode').value;
             if(!validCode(c)){ showErr('کد ملی حساب را درست (۱۰ رقم) بنویسید.'); return; }
-            if(!confirm('حساب و همهٔ داده‌های آن (کلاس‌ها، حضور و غیاب، رفتار) برای همیشه پاک می‌شود. ادامه می‌دهید؟')) return;
+            if(!confirm('حساب و همهٔ داده‌های آن (کلاس‌ها، حضور و غیاب، رفتار) برای همیشه پاک می‌شود و قابل بازگشت نیست (مگر فایل پشتیبان داشته باشید). ادامه می‌دهید؟')) return;
+            var w = prompt('برای تأیید نهایی، کلمهٔ «حذف» را بنویسید:');
+            if(w === null || String(w).trim() !== 'حذف') { showErr('حذف انجام نشد: کلمهٔ تأیید درست وارد نشد.'); return; }
             try { deleteAccount(c); $('fgCode').value=''; tab('signup'); alert('✅ حساب حذف شد. می‌توانید دوباره حساب بسازید.'); }
             catch(ex){ showErr(ex.message); }
         });
@@ -2603,6 +2630,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         var isDark = document.body.classList.contains('dark');
         this.textContent = isDark ? '☀️' : '🌙';
         try { localStorage.setItem('cm_theme', isDark ? 'dark' : 'light'); } catch(e) {}
+        try { window.localStorage.setItem('cm_theme', isDark ? 'dark' : 'light'); } catch(e) {}
     });
 
     /* ═══════════════════════════════════════════════════
@@ -3715,6 +3743,10 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
        ═══════════════════════════════════════════════════ */
     function buildDailyAbsent(date) {
         var groups = [], notRecorded = [], totalJ = 0, totalU = 0;
+        var dayYear = academicYearOfDate(date);
+        if (dayYear && dayYear !== yearsState.current) {
+            return { groups: [], notRecorded: [], totalJ: 0, totalU: 0, otherYear: dayYear };
+        }
         (appData.classes || []).forEach(function(cls) {
             var day = attendanceData[getAttKey(cls.className, date)];
             var hasAny = day && Object.keys(day).length > 0;
@@ -3751,7 +3783,9 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         html += '<div class="h">گزارش غایبین روز - ' + escapeHtml(describeJalaliDate(date) || date) + '</div>';
         html += yearLine();
         html += '<div class="sub">جمع غایبین: ' + toPersianNum(r.totalJ + r.totalU) + ' نفر &nbsp; | &nbsp; موجه: ' + toPersianNum(r.totalJ) + ' &nbsp; | &nbsp; غیرموجه: ' + toPersianNum(r.totalU) + '</div>';
-        if (r.groups.length) {
+        if (r.otherYear) {
+            html += '<div class="sub">این تاریخ مربوط به سال تحصیلی ' + yearLabel(r.otherYear) + ' است.</div>';
+        } else if (r.groups.length) {
             html += '<table><thead><tr><th style="width:30px;">#</th><th>نام و نام خانوادگی</th><th style="width:70px;">کلاس</th><th style="width:80px;">نوع غیبت</th></tr></thead><tbody>';
             var n = 0;
             r.groups.forEach(function(g) {
@@ -3799,7 +3833,9 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
                 '<span>جمع غایبین: ' + toPersianNum(cur.totalJ + cur.totalU) + ' نفر</span>' +
                 '<span style="color:#3b82f6;">موجه: ' + toPersianNum(cur.totalJ) + '</span>' +
                 '<span style="color:#ef4444;">غیرموجه: ' + toPersianNum(cur.totalU) + '</span></div>';
-            if (!cur.groups.length) {
+            if (cur.otherYear) {
+                h += '<div class="no-result">این تاریخ مربوط به سال تحصیلی ' + yearLabel(cur.otherYear) + ' است؛ ابتدا سال تحصیلی را (از بالای صفحه یا تنظیمات) تغییر دهید.</div>';
+            } else if (!cur.groups.length) {
                 h += '<div class="no-result">در این روز غایبی ثبت نشده است</div>';
             } else {
                 cur.groups.forEach(function(g) {
@@ -4622,17 +4658,6 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         draw();
     }
 
-    (function() {
-        var di = document.getElementById('hwDueDate'), dt = document.getElementById('hwDueDateText');
-        if (!di) return;
-        function upd() { if (dt) dt.textContent = di.value ? describeJalaliDate(di.value) : ''; }
-        function open() { openJalaliPicker(di.value, function(v) { di.value = v; upd(); }); }
-        di.addEventListener('click', open);
-        di.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
-        var btn = document.getElementById('btnAddHomework');
-        if (btn) btn.addEventListener('click', function() { setTimeout(upd, 0); });
-    })();
-
     function attachJalaliPicker(id) {
         var inp = document.getElementById(id);
         if (!inp) return;
@@ -5342,8 +5367,12 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         var totalStudents = 0;
         appData.classes.forEach(function(c) { totalStudents += (c.students || []).length; });
 
-        var totalAttendance = 0;
-        Object.keys(attendanceData).forEach(function(key) { totalAttendance++; });
+        var attDaysSeen = {};
+        Object.keys(attendanceData).forEach(function(key) {
+            var d = key.split('|')[1];
+            if (d && attendanceData[key] && Object.keys(attendanceData[key]).length) attDaysSeen[d] = 1;
+        });
+        var totalAttendance = Object.keys(attDaysSeen).length;
 
         var totalBehaviors = 0;
         Object.keys(behaviorsData).forEach(function(cls) {
@@ -5625,7 +5654,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     /* ═══════════════════════════════════════════════════
        🔄 به‌روزرسانی از GitHub
        ═══════════════════════════════════════════════════ */
-    var APP_VERSION = '1.2.5';
+    var APP_VERSION = '1.2.6';
     var realLS = window.localStorage, UPD_KEY = 'cmupd_v1';
     var pendingUpdate = null;
 
@@ -5833,10 +5862,10 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         Array.prototype.forEach.call(openOverlays(), function(o) { if (o.id) o.classList.remove('open'); else o.remove(); });
         showPage('home');
     }
-    var hiddenAt = 0;
+    var hiddenAt = 0, RESET_HOME_AFTER_MS = 5 * 60 * 1000; // فقط اگر برنامه بیش از ۵ دقیقه در پس‌زمینه بوده
     document.addEventListener('visibilitychange', function() {
         if (document.hidden) hiddenAt = Date.now();
-        else if (hiddenAt) { resetToHome(); hiddenAt = 0; }
+        else if (hiddenAt) { if (Date.now() - hiddenAt >= RESET_HOME_AFTER_MS) resetToHome(); hiddenAt = 0; }
     });
     window.addEventListener('pageshow', function(e) { if (e.persisted) resetToHome(); });
 
