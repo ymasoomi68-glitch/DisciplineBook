@@ -2159,6 +2159,8 @@ var CMAuth = (function(){
         return b64(cur);
     }
     function randSalt(){ var u=new Uint8Array(16); if(window.crypto&&crypto.getRandomValues) crypto.getRandomValues(u); else for(var i=0;i<16;i++) u[i]=Math.floor(Math.random()*256); return u; }
+    function b64(u8){ var s=''; for(var i=0;i<u8.length;i++) s+=String.fromCharCode(u8[i]); return btoa(s); }
+    function unb64(s){ var b=atob(s), u=new Uint8Array(b.length); for(var i=0;i<b.length;i++) u[i]=b.charCodeAt(i); return u; }
 
     function hasLegacyData(){ try { for(var i=0;i<real.length;i++){ var k=real.key(i); if(k && k.indexOf('cm_')===0 && k!=='cm_theme' && k!=='cm_active_page') return true; } } catch(e){} return false; }
     function prefixFor(u){ return u && u.legacy ? '' : 'cmu_' + (u?u.code:'x') + '__'; }
