@@ -1,6 +1,6 @@
 {
   "app": "discipline-book",
-  "version": "1.2.8",
+  "version": "1.2.7",
   "notes": [
     "به‌روزرسانی خودکار"
   ],
@@ -12,9 +12,9 @@
     "manifest-teacher.json"
   ],
   "sha256": {
-    "index.html": "3525f8c311aad70f4c6cb0dc223e292d705d51b1e515a57dda877f0ca14964d4",
-    "teacher.html": "917c35ad49174e8c2f04a2f87afdeb74157fcf75bf9c4dfb50f29c36973f3506",
-    "sw.js": "876ad799c0c84a09acc666dd77adc48ba1bf3d5145b90e2b0a40496a79e03982",
+    "index.html": "120bf16f44a23866179c4b0f0bead2b90def11ff92c820a3cf5fbf30bb2cad0f",
+    "teacher.html": "dd5a6b573f2c475a97e969f827fe34bb3b31a67615a2b6283d9e03268dc14b29",
+    "sw.js": "93e6c159b1efb999b4ae8d2e9704aef945613bee157d97491ef97507e1e67c47",
     "manifest.json": "d58ead88489a2b786cbe68165e9e4b0bafc325a35d65b611699800330d2daa31",
     "manifest-teacher.json": "f86a18047a0e754acbf83a1150e2bbb00e55282f2927bdde45e6009c722cda87"
   },

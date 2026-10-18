@@ -1787,7 +1787,7 @@
                     </div>
                     <div class="settings-item" style="border-bottom:none;">
                         <span class="settings-item-label">ظرفیت تقریبی</span>
-                       <span class="settings-item-value" id="statStorageCapacity">در حال محاسبه...</span>
+                        <span class="settings-item-value">۵ MB</span>
                     </div>
                     <p style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.6;">
                         ⚠️ اگر حافظه پر شد، از داده‌های قدیمی پشتیبان بگیرید و پاک کنید.
@@ -3442,6 +3442,20 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     var attCurrentDate = '';
     var attendanceData = {};
     var ATT_STORAGE_KEY = yk('cm_attendance_v1');
+    var lateTimes = {};   // ساعت ورود دانش‌آموزان متأخر: { "کلاس|تاریخ": { شناسهٔ دانش‌آموز: "HH:MM" } }
+    var LATE_STORAGE_KEY = yk('cm_late_times_v1');
+    function faTime(t) { return String(t).replace(/\d/g, function(d) { return '۰۱۲۳۴۵۶۷۸۹'.charAt(d); }); }
+    // ساعت واردشده را به «HH:MM» تبدیل می‌کند؛ '' = خالی، null = نامعتبر
+    function parseLateTime(str) {
+        var t = String(str == null ? '' : str).replace(/[۰-۹]/g, function(d) { return '۰۱۲۳۴۵۶۷۸۹'.indexOf(d); })
+            .replace(/[٠-٩]/g, function(d) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); }).replace(/[\s]/g, '').replace(/[٫.،:؛/-]/g, ':');
+        if (!t) return '';
+        var m = t.match(/^(\d{1,2}):(\d{1,2})$/) || t.match(/^(\d{1,2})(\d{2})$/);
+        if (!m) return null;
+        var h = parseInt(m[1], 10), mi = parseInt(m[2], 10);
+        if (h > 23 || mi > 59 || m[2].length !== 2) return null;
+        return (h < 10 ? '0' : '') + h + ':' + (mi < 10 ? '0' : '') + mi;
+    }
 
     // وضعیت‌ها: present | late | absent_j (غایب موجه) | absent_u (غایب غیرموجه)
     // دادهٔ قدیمی: absent ← غیرموجه ، excused (مرخصی) ← موجه
@@ -3468,11 +3482,12 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
             var raw = localStorage.getItem(ATT_STORAGE_KEY);
             if (raw) attendanceData = JSON.parse(raw);
         } catch(e) { attendanceData = {}; }
+        try { var rawL = localStorage.getItem(LATE_STORAGE_KEY); lateTimes = rawL ? (JSON.parse(rawL) || {}) : {}; } catch(e) { lateTimes = {}; }
         migrateAttendance();
     }
 
     function saveAttendance() {
-        try { localStorage.setItem(ATT_STORAGE_KEY, JSON.stringify(attendanceData)); }
+        try { localStorage.setItem(ATT_STORAGE_KEY, JSON.stringify(attendanceData)); localStorage.setItem(LATE_STORAGE_KEY, JSON.stringify(lateTimes)); }
         catch(e) { alert('⚠️ خطا در ذخیره‌سازی: ' + e.message); }
     }
 
@@ -3512,11 +3527,24 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         return dayData[studentId] || '';
     }
 
-    function setStatus(cls, date, studentId, status) {
+    function getLateTime(cls, date, studentId) {
+        var lt = lateTimes[getAttKey(cls.className, date)];
+        return (lt && lt[studentId]) || '';
+    }
+
+    // lateTime فقط برای وضعیت «تأخیر» معنی دارد؛ برای هر وضعیت دیگر ساعت پاک می‌شود
+    function setStatus(cls, date, studentId, status, lateTime) {
         var key = getAttKey(cls.className, date);
         if (!attendanceData[key]) attendanceData[key] = {};
         if (status === '') delete attendanceData[key][studentId];
         else attendanceData[key][studentId] = status;
+        if (status === 'late' && lateTime) {
+            if (!lateTimes[key]) lateTimes[key] = {};
+            lateTimes[key][studentId] = lateTime;
+        } else if (lateTimes[key]) {
+            delete lateTimes[key][studentId];
+            if (!Object.keys(lateTimes[key]).length) delete lateTimes[key];
+        }
         saveAttendance();
     }
 
@@ -3565,7 +3593,8 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
             html += '<div class="att-actions">';
             html += '<button class="att-btn' + (status === 'present' ? ' selected' : '') + '" data-status="present">حاضر</button>';
             html += '<button class="att-btn' + (isAbs ? ' selected' : '') + '" data-status="absent">' + absLabel + '</button>';
-            html += '<button class="att-btn' + (status === 'late' ? ' selected' : '') + '" data-status="late">تأخیر</button>';
+            var lateT = status === 'late' ? getLateTime(cls, date, s.id) : '';
+            html += '<button class="att-btn' + (status === 'late' ? ' selected' : '') + '" data-status="late"><span style="text-align:center;line-height:1.2;">تأخیر' + (lateT ? '<br><small style="font-size:10.5px;font-weight:600;">' + faTime(lateT) + '</small>' : '') + '</span></button>';
             html += '</div></div>';
         });
         html += '</div>';
@@ -3590,11 +3619,55 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
                     return;
                 }
 
+                if (status === 'late') {
+                    var stuL = null;
+                    (cls.students || []).forEach(function(x) { if (x.id === sid) stuL = x; });
+                    askLateTime(stuL ? ((stuL.family || '') + ' ' + (stuL.name || '')) : '', current === 'late', getLateTime(cls, date, sid), function(action, time) {
+                        if (action === 'clear') setStatus(cls, date, sid, '');
+                        else setStatus(cls, date, sid, 'late', time);
+                        renderAttendance();
+                    });
+                    return;
+                }
+
                 var newStatus = (current === status) ? '' : status;
                 setStatus(cls, date, sid, newStatus);
                 renderAttendance();
             });
         });
+    }
+
+    // کادر ثبت ساعت ورود به کلاس برای تأخیر (ساعت اختیاری است؛ خالی = تأخیر بدون ساعت)
+    function askLateTime(studentName, hasLate, curTime, cb) {
+        var modal = document.createElement('div');
+        modal.className = 'modal-overlay open';
+        modal.innerHTML =
+            '<div class="modal" style="max-width:420px;">' +
+                '<h2 class="modal-title">⏰ ساعت ورود به کلاس</h2>' +
+                '<div style="font-size:14px;font-weight:600;margin-bottom:10px;">' + escapeHtml(studentName) + '</div>' +
+                '<input type="text" class="form-input" id="lateTimeInput" inputmode="numeric" autocomplete="off" style="direction:ltr;text-align:center;font-size:20px;" placeholder="مثلاً ۰۷:۴۵" value="' + escapeHtml(curTime || '') + '">' +
+                '<div id="lateTimeErr" style="color:#dc2626;font-size:12.5px;min-height:18px;margin-top:4px;"></div>' +
+                '<div class="modal-actions">' +
+                    '<button class="btn btn-primary" id="lateTimeOk">ثبت تأخیر</button>' +
+                    (hasLate ? '<button class="btn btn-outline" id="lateTimeClear">پاک کردن تأخیر</button>' : '') +
+                    '<button class="btn btn-outline" id="lateTimeCancel">انصراف</button>' +
+                '</div>' +
+            '</div>';
+        document.body.appendChild(modal);
+        var inp = modal.querySelector('#lateTimeInput'), err = modal.querySelector('#lateTimeErr');
+        function close() { if (modal.parentNode) modal.parentNode.removeChild(modal); }
+        function submit() {
+            var t = parseLateTime(inp.value);
+            if (t === null) { err.textContent = 'ساعت را به شکل ۰۷:۴۵ بنویسید (ساعت ۰ تا ۲۳، دقیقه ۰۰ تا ۵۹).'; return; }
+            close(); cb('set', t);
+        }
+        modal.querySelector('#lateTimeOk').addEventListener('click', submit);
+        inp.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+        var clr = modal.querySelector('#lateTimeClear');
+        if (clr) clr.addEventListener('click', function() { close(); cb('clear'); });
+        modal.querySelector('#lateTimeCancel').addEventListener('click', close);
+        modal.addEventListener('click', function(e) { if (e.target === modal) close(); });
+        setTimeout(function() { try { inp.focus(); inp.select(); } catch(e) {} }, 50);
     }
 
     function askAbsenceType(studentName, current, cb) {
@@ -3698,6 +3771,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         if (!confirm('همهٔ ثبت‌های این روز پاک شوند؟')) return;
         var key = getAttKey(cls.className, attCurrentDate);
         delete attendanceData[key];
+        delete lateTimes[key];
         saveAttendance();
         renderAttendance();
     });
@@ -3840,34 +3914,48 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
        فقط می‌خواند؛ هیچ دادهٔ حضور و غیابی را تغییر نمی‌دهد.
        ═══════════════════════════════════════════════════ */
     function buildDailyAbsent(date) {
-        var groups = [], notRecorded = [], totalJ = 0, totalU = 0;
+        var groups = [], notRecorded = [], totalJ = 0, totalU = 0, totalL = 0;
         var dayYear = academicYearOfDate(date);
         if (dayYear && dayYear !== yearsState.current) {
-            return { groups: [], notRecorded: [], totalJ: 0, totalU: 0, otherYear: dayYear };
+            return { groups: [], notRecorded: [], totalJ: 0, totalU: 0, totalL: 0, otherYear: dayYear };
         }
         (appData.classes || []).forEach(function(cls) {
-            var day = attendanceData[getAttKey(cls.className, date)];
+            var key = getAttKey(cls.className, date);
+            var day = attendanceData[key];
             var hasAny = day && Object.keys(day).length > 0;
             if (!hasAny) { notRecorded.push(cls.className); return; }
-            var list = [];
-            (cls.students || []).forEach(function(s) {
+            var list = [], nAbs = 0, nLate = 0, times = lateTimes[key] || {};
+            (cls.students || []).forEach(function(s, i) {
                 var st = day[s.id];
-                if (st === 'absent_j' || st === 'absent_u') {
-                    list.push({ name: ((s.family || '') + ' ' + (s.name || '')).trim(), type: st });
-                    if (st === 'absent_j') totalJ++; else totalU++;
+                if (st === 'absent_j' || st === 'absent_u' || st === 'late') {
+                    // row = شمارهٔ ردیف دانش‌آموز در لیست کلاسی
+                    list.push({ name: ((s.family || '') + ' ' + (s.name || '')).trim(), row: i + 1, type: st, time: st === 'late' ? (times[s.id] || '') : '' });
+                    if (st === 'absent_j') { totalJ++; nAbs++; } else if (st === 'absent_u') { totalU++; nAbs++; } else { totalL++; nLate++; }
                 }
             });
-            if (list.length) groups.push({ className: cls.className, gradeName: cls.gradeName || '', list: list });
+            if (list.length) groups.push({ className: cls.className, gradeName: cls.gradeName || '', list: list, nAbs: nAbs, nLate: nLate });
         });
-        return { groups: groups, notRecorded: notRecorded, totalJ: totalJ, totalU: totalU };
+        return { groups: groups, notRecorded: notRecorded, totalJ: totalJ, totalU: totalU, totalL: totalL };
     }
 
-    function dailyAbsentTypeLabel(t) { return t === 'absent_j' ? 'موجه' : 'غیرموجه'; }
+    function dailyAbsentTypeLabel(it) {
+        if (it.type === 'absent_j') return 'غایب موجه';
+        if (it.type === 'absent_u') return 'غایب غیرموجه';
+        return 'تأخیر' + (it.time ? ' — ساعت ' + faTime(it.time) : '');
+    }
+    function dailyAbsentTypeColor(t) { return t === 'absent_j' ? '#3b82f6' : (t === 'absent_u' ? '#ef4444' : '#d97706'); }
+    function dailyAbsentName(it) { return it.name + ' (' + toPersianNum(it.row) + ')'; }
+    function dailyAbsentGroupCounts(g) {
+        var p = [];
+        if (g.nAbs) p.push(toPersianNum(g.nAbs) + ' غایب');
+        if (g.nLate) p.push(toPersianNum(g.nLate) + ' تأخیر');
+        return p.join('، ');
+    }
 
     function printDailyAbsent(date, r) {
         var rows = 0; r.groups.forEach(function(g) { rows += g.list.length + 1; });
         var fs = rows > 60 ? 9 : rows > 45 ? 10 : rows > 30 ? 11 : 12;
-        var html = '<html><head><meta charset="UTF-8"><title>گزارش غایبین روز</title><style>';
+        var html = '<html><head><meta charset="UTF-8"><title>گزارش غایبین و تأخیرهای روز</title><style>';
         html += '@page { size: A4 portrait; margin: 0.7cm 0.8cm 0.3cm 0.8cm; }';
         html += 'body { font-family: "Vazirmatn", "B Nazanin", "Tahoma", sans-serif; direction: rtl; margin: 0; }';
         html += '.h { text-align: center; font-weight: bold; font-size: 15pt; padding: 4px 0 8px 0; border-bottom: 1.5px solid #000; margin-bottom: 8px; }';
@@ -3878,24 +3966,24 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         html += 'tr.cls td { background: #f2f2f2; font-weight: bold; text-align: right; }';
         html += '.note { font-size: 10pt; margin-top: 8px; }';
         html += '</style></head><body>';
-        html += '<div class="h">گزارش غایبین روز - ' + escapeHtml(describeJalaliDate(date) || date) + '</div>';
+        html += '<div class="h">گزارش غایبین و تأخیرهای روز - ' + escapeHtml(describeJalaliDate(date) || date) + '</div>';
         html += yearLine();
-        html += '<div class="sub">جمع غایبین: ' + toPersianNum(r.totalJ + r.totalU) + ' نفر &nbsp; | &nbsp; موجه: ' + toPersianNum(r.totalJ) + ' &nbsp; | &nbsp; غیرموجه: ' + toPersianNum(r.totalU) + '</div>';
+        html += '<div class="sub">جمع غایبین: ' + toPersianNum(r.totalJ + r.totalU) + ' نفر &nbsp; | &nbsp; موجه: ' + toPersianNum(r.totalJ) + ' &nbsp; | &nbsp; غیرموجه: ' + toPersianNum(r.totalU) + ' &nbsp; | &nbsp; تأخیر: ' + toPersianNum(r.totalL) + ' نفر</div>';
         if (r.otherYear) {
             html += '<div class="sub">این تاریخ مربوط به سال تحصیلی ' + yearLabel(r.otherYear) + ' است.</div>';
         } else if (r.groups.length) {
-            html += '<table><thead><tr><th style="width:30px;">#</th><th>نام و نام خانوادگی</th><th style="width:70px;">کلاس</th><th style="width:80px;">نوع غیبت</th></tr></thead><tbody>';
+            html += '<table><thead><tr><th style="width:30px;">#</th><th>نام و نام خانوادگی (ردیف)</th><th style="width:70px;">کلاس</th><th style="width:130px;">وضعیت</th></tr></thead><tbody>';
             var n = 0;
             r.groups.forEach(function(g) {
-                html += '<tr class="cls"><td colspan="4">کلاس ' + escapeHtml(g.className) + (g.gradeName ? ' - ' + escapeHtml(g.gradeName) : '') + ' &nbsp;(' + toPersianNum(g.list.length) + ' غایب)</td></tr>';
+                html += '<tr class="cls"><td colspan="4">کلاس ' + escapeHtml(g.className) + (g.gradeName ? ' - ' + escapeHtml(g.gradeName) : '') + ' &nbsp;(' + dailyAbsentGroupCounts(g) + ')</td></tr>';
                 g.list.forEach(function(it) {
                     n++;
-                    html += '<tr><td>' + toPersianNum(n) + '</td><td class="name">' + escapeHtml(it.name) + '</td><td>' + escapeHtml(g.className) + '</td><td>' + dailyAbsentTypeLabel(it.type) + '</td></tr>';
+                    html += '<tr><td>' + toPersianNum(n) + '</td><td class="name">' + escapeHtml(dailyAbsentName(it)) + '</td><td>' + escapeHtml(g.className) + '</td><td>' + escapeHtml(dailyAbsentTypeLabel(it)) + '</td></tr>';
                 });
             });
             html += '</tbody></table>';
         } else {
-            html += '<div class="sub">در این روز غایبی ثبت نشده است.</div>';
+            html += '<div class="sub">در این روز غایب یا متأخری ثبت نشده است.</div>';
         }
         if (r.notRecorded.length) html += '<div class="note">کلاس‌های بدون ثبت حضور و غیاب در این روز: ' + r.notRecorded.map(escapeHtml).join('، ') + '</div>';
         html += '</body></html>';
@@ -3912,7 +4000,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
                     '<button class="btn btn-success btn-sm" id="dabPrint">🖨️ چاپ گزارش</button>' +
                     '<button class="btn btn-outline btn-sm" id="dabClose">✕ بستن</button>' +
                 '</div>' +
-                '<h2 class="modal-title">📋 غایبین روز - همهٔ کلاس‌ها</h2>' +
+                '<h2 class="modal-title">📋 غایبین و تأخیرهای روز - همهٔ کلاس‌ها</h2>' +
                 '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;">' +
                     '<button class="btn btn-outline btn-sm" id="dabPrev">◀ روز قبل</button>' +
                     '<input type="text" class="form-input" id="dabDate" style="max-width:140px;" placeholder="تاریخ">' +
@@ -3930,19 +4018,19 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
             h += '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;font-weight:600;">' +
                 '<span>جمع غایبین: ' + toPersianNum(cur.totalJ + cur.totalU) + ' نفر</span>' +
                 '<span style="color:#3b82f6;">موجه: ' + toPersianNum(cur.totalJ) + '</span>' +
-                '<span style="color:#ef4444;">غیرموجه: ' + toPersianNum(cur.totalU) + '</span></div>';
+                '<span style="color:#ef4444;">غیرموجه: ' + toPersianNum(cur.totalU) + '</span>' +
+                '<span style="color:#d97706;">تأخیر: ' + toPersianNum(cur.totalL) + ' نفر</span></div>';
             if (cur.otherYear) {
                 h += '<div class="no-result">این تاریخ مربوط به سال تحصیلی ' + yearLabel(cur.otherYear) + ' است؛ ابتدا سال تحصیلی را (از بالای صفحه یا تنظیمات) تغییر دهید.</div>';
             } else if (!cur.groups.length) {
-                h += '<div class="no-result">در این روز غایبی ثبت نشده است</div>';
+                h += '<div class="no-result">در این روز غایب یا متأخری ثبت نشده است</div>';
             } else {
                 cur.groups.forEach(function(g) {
                     h += '<div style="margin-bottom:14px;"><div style="font-weight:700;margin-bottom:6px;">کلاس ' + escapeHtml(g.className) +
                         (g.gradeName ? ' <small style="font-weight:400;color:var(--text-muted);">(' + escapeHtml(g.gradeName) + ')</small>' : '') +
-                        ' — ' + toPersianNum(g.list.length) + ' غایب</div><div class="table-wrap"><table class="data-table"><thead><tr><th>#</th><th>نام و نام خانوادگی</th><th>نوع غیبت</th></tr></thead><tbody>';
+                        ' — ' + dailyAbsentGroupCounts(g) + '</div><div class="table-wrap"><table class="data-table"><thead><tr><th>#</th><th>نام و نام خانوادگی (ردیف)</th><th>وضعیت</th></tr></thead><tbody>';
                     g.list.forEach(function(it, i) {
-                        var col = it.type === 'absent_j' ? '#3b82f6' : '#ef4444';
-                        h += '<tr><td>' + toPersianNum(i + 1) + '</td><td>' + escapeHtml(it.name) + '</td><td style="color:' + col + ';font-weight:bold;">' + dailyAbsentTypeLabel(it.type) + '</td></tr>';
+                        h += '<tr><td>' + toPersianNum(i + 1) + '</td><td>' + escapeHtml(dailyAbsentName(it)) + '</td><td style="color:' + dailyAbsentTypeColor(it.type) + ';font-weight:bold;">' + escapeHtml(dailyAbsentTypeLabel(it)) + '</td></tr>';
                     });
                     h += '</tbody></table></div></div>';
                 });
@@ -4056,6 +4144,17 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     function inStKey(s) { var c = inDigits(s.codemelli || '').replace(/\D/g, ''); return c || 'n:' + inNorm((s.family || '') + ' ' + (s.name || '')); }
     // کلید کوتاه (آخرین L رقم کد ملی) برای گزارش‌های فرمت ۲
     function inSfx(s, L) { var c = inDigits(s.codemelli || '').replace(/\D/g, ''); return c ? c.slice(-L) : 'n:' + inNorm((s.family || '') + ' ' + (s.name || '')).replace(/[,|]/g, ' '); }
+    // «کلید=ساعت،…» ← { کلید: "HH:MM" } (ساعت ورود متأخرین که معلم فرستاده؛ فیلد اختیاری)
+    function inLateTimes(t) {
+        var out = {};
+        String(t || '').split(',').forEach(function(x) {
+            var i = x.lastIndexOf('='); if (i < 1) return;
+            var k = x.slice(0, i).trim(), tm = parseLateTime(x.slice(i + 1));
+            if (!k || !tm) return;
+            out[k.indexOf('n:') === 0 ? k : inDigits(k)] = tm;
+        });
+        return out;
+    }
     function inList(t) { return String(t || '').split(',').map(function(x) { x = x.trim(); return x.indexOf('n:') === 0 ? x : inDigits(x); }).filter(Boolean); }
 
     // همهٔ گزارش‌های داخل متن را پیدا می‌کند (فرمت کوتاه DB2 و فرمت قدیمی DB1)
@@ -4063,7 +4162,8 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         var found = [], m;
         var re2 = /DB2\|([\d۰-۹٠-٩]+)\|([^|\n]+)\|([\d۰-۹٠-٩]{4}\/[\d۰-۹٠-٩]{2}\/[\d۰-۹٠-٩]{2})\|([^|\n]*)\|([^|\n]*)\|([^|\n]*)(?:\|([^\n]*))?/g;
         while ((m = re2.exec(text))) {
-            found.push({ v: 2, pos: m.index, L: parseInt(inDigits(m[1]), 10), c: m[2].trim(), d: inDigits(m[3]), u: inList(m[4]), j: inList(m[5]), l: inList(m[6]), t: (m[7] || '').trim() });
+            var tail = (m[7] || '').split('|');
+            found.push({ v: 2, pos: m.index, L: parseInt(inDigits(m[1]), 10), c: m[2].trim(), d: inDigits(m[3]), u: inList(m[4]), j: inList(m[5]), l: inList(m[6]), t: (tail[0] || '').trim(), lt: inLateTimes(tail[1]) });
         }
         var re1 = /DB1\[([^\]]+)\]/g;
         while ((m = re1.exec(text))) {
@@ -4087,14 +4187,14 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
 
     // وضعیت هر دانش‌آموز کلاس مقصد بر اساس گزارش
     function inboxResolve(r, cls) {
-        var day = {}, unmatched = 0, students = cls.students || [];
+        var day = {}, times = {}, unmatched = 0, students = cls.students || [];
         if (r.v === 2) {
             var map = {};
             students.forEach(function(s) { var k = inSfx(s, r.L); (map[k] = map[k] || []).push(s); day[s.id] = 'present'; });
             [['u', 'absent_u'], ['j', 'absent_j'], ['l', 'late']].forEach(function(p) {
                 r[p[0]].forEach(function(k) {
                     var arr = map[k];
-                    if (arr && arr.length === 1) day[arr[0].id] = p[1]; else unmatched++;
+                    if (arr && arr.length === 1) { day[arr[0].id] = p[1]; if (p[1] === 'late' && r.lt && r.lt[k]) times[arr[0].id] = r.lt[k]; } else unmatched++;
                 });
             });
         } else {
@@ -4106,7 +4206,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
                 day[s.id] = st;
             });
         }
-        return { day: day, unmatched: unmatched };
+        return { day: day, unmatched: unmatched, times: times };
     }
 
     // آمارِ «کدام کلاس‌ها در این روز حضور و غیاب ثبت کرده‌اند»
@@ -4157,7 +4257,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
                 (tcls.students || []).forEach(function(s) {
                     var st = res.day[s.id]; if (!st) return;
                     counts[st]++;
-                    if (st !== 'present') abs.push(((s.family || '') + ' ' + (s.name || '')).trim() + ' (' + ST_FA[st] + ')');
+                    if (st !== 'present') abs.push(((s.family || '') + ' ' + (s.name || '')).trim() + ' (' + ST_FA[st] + (st === 'late' && res.times[s.id] ? ' ' + faTime(res.times[s.id]) : '') + ')');
                 });
                 exists = !!attendanceData[getAttKey(tcls.className, r.d)];
             }
@@ -4232,6 +4332,8 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
             var res = inboxResolve(r, cls);
             skipped += res.unmatched;
             attendanceData[getAttKey(cls.className, r.d)] = res.day;
+            if (Object.keys(res.times).length) lateTimes[getAttKey(cls.className, r.d)] = res.times;
+            else delete lateTimes[getAttKey(cls.className, r.d)];
             applied++;
         });
         saveAttendance();
@@ -5483,7 +5585,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         e = document.getElementById('statTotalAttendance'); if (e) e.textContent = toPersianNum(totalAttendance);
         e = document.getElementById('statTotalBehaviors'); if (e) e.textContent = toPersianNum(totalBehaviors);
 
-               // حافظه
+        // حافظه
         var totalSize = 0;
         try {
             localStorage.keys().forEach(function(key) {
@@ -5491,45 +5593,15 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
             });
         } catch(e2) {}
         var sizeKB = Math.round(totalSize / 1024);
+        var percent = Math.min(100, Math.round((totalSize / (5 * 1024 * 1024)) * 100));
 
         var ss = document.getElementById('statStorageUsed');
         if (ss) ss.textContent = toPersianNum(sizeKB) + ' KB';
-
         var sb = document.getElementById('storageBarFill');
-        var sc = document.getElementById('statStorageCapacity');
-
-        // محاسبه ظرفیت واقعی از navigator.storage.estimate
-        try {
-            if (navigator.storage && navigator.storage.estimate) {
-                navigator.storage.estimate().then(function(est) {
-                    if (!est || !est.quota) {
-                        if (sc) sc.textContent = 'نامشخص';
-                        return;
-                    }
-                    var quotaMB = est.quota / (1024 * 1024);
-                    var usedMB = est.usage ? est.usage / (1024 * 1024) : 0;
-                    if (sc) {
-                        if (quotaMB >= 1024) {
-                            sc.textContent = toPersianNum((quotaMB / 1024).toFixed(1)) + ' GB';
-                        } else {
-                            sc.textContent = toPersianNum(Math.round(quotaMB)) + ' MB';
-                        }
-                    }
-                    if (sb && est.quota > 0) {
-                        sb.style.width = Math.min(100, (est.usage / est.quota) * 100).toFixed(2) + '%';
-                    }
-                }).catch(function() {
-                    if (sc) sc.textContent = 'نامشخص';
-                });
-            } else {
-                if (sc) sc.textContent = '~۵ MB';
-                var percent = Math.min(100, Math.round((totalSize / (5 * 1024 * 1024)) * 100));
-                if (sb) sb.style.width = percent + '%';
-            }
-        } catch(e3) {
-            if (sc) sc.textContent = 'نامشخص';
-        }
+        if (sb) sb.style.width = percent + '%';
+        try { if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(function(est) { if (est && est.quota && sb) sb.style.width = Math.min(100, totalSize / est.quota * 100).toFixed(2) + '%'; }); } catch(e3) {}
     }
+
     // ===== ذخیره تنظیمات =====
     document.getElementById('btnSaveSettings').addEventListener('click', function() {
         var e1 = document.getElementById('setTeacherName');
@@ -5574,6 +5646,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
             exportDate: new Date().toISOString(),
             appData: appData,
             attendanceData: attendanceData,
+            lateTimes: lateTimes,
             behaviorsData: behaviorsData,
             customReasons: customReasons,
             appSettings: appSettings
@@ -5634,6 +5707,8 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
                     attendanceData = parsed.attendanceData;
                     migrateAttendance();
                     localStorage.setItem(ATT_STORAGE_KEY, JSON.stringify(attendanceData));
+                    lateTimes = (parsed.lateTimes && typeof parsed.lateTimes === 'object' && !Array.isArray(parsed.lateTimes)) ? parsed.lateTimes : {};
+                    localStorage.setItem(LATE_STORAGE_KEY, JSON.stringify(lateTimes));
                 }
 
                 if (parsed.behaviorsData) {
@@ -5663,7 +5738,9 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     document.getElementById('btnClearAttendance').addEventListener('click', function() {
         if (!confirm('⚠️ همهٔ داده‌های حضور و غیاب پاک شوند؟')) return;
         attendanceData = {};
+        lateTimes = {};
         localStorage.removeItem(ATT_STORAGE_KEY);
+        localStorage.removeItem(LATE_STORAGE_KEY);
         renderSettings();
         alert('✅ حضور و غیاب پاک شد.');
     });
@@ -5783,7 +5860,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     /* ═══════════════════════════════════════════════════
        🔄 به‌روزرسانی از GitHub
        ═══════════════════════════════════════════════════ */
-    var APP_VERSION = '1.2.8';
+    var APP_VERSION = '1.2.7';
     var realLS = window.localStorage, UPD_KEY = 'cmupd_v1';
     var pendingUpdate = null;
 
