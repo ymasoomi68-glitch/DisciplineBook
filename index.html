@@ -1787,7 +1787,7 @@
                     </div>
                     <div class="settings-item" style="border-bottom:none;">
                         <span class="settings-item-label">ظرفیت تقریبی</span>
-                        <span class="settings-item-value">۵ MB</span>
+                       <span class="settings-item-value" id="statStorageCapacity">در حال محاسبه...</span>
                     </div>
                     <p style="font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.6;">
                         ⚠️ اگر حافظه پر شد، از داده‌های قدیمی پشتیبان بگیرید و پاک کنید.
@@ -5483,7 +5483,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         e = document.getElementById('statTotalAttendance'); if (e) e.textContent = toPersianNum(totalAttendance);
         e = document.getElementById('statTotalBehaviors'); if (e) e.textContent = toPersianNum(totalBehaviors);
 
-        // حافظه
+               // حافظه
         var totalSize = 0;
         try {
             localStorage.keys().forEach(function(key) {
@@ -5491,15 +5491,45 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
             });
         } catch(e2) {}
         var sizeKB = Math.round(totalSize / 1024);
-        var percent = Math.min(100, Math.round((totalSize / (5 * 1024 * 1024)) * 100));
 
         var ss = document.getElementById('statStorageUsed');
         if (ss) ss.textContent = toPersianNum(sizeKB) + ' KB';
-        var sb = document.getElementById('storageBarFill');
-        if (sb) sb.style.width = percent + '%';
-        try { if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(function(est) { if (est && est.quota && sb) sb.style.width = Math.min(100, totalSize / est.quota * 100).toFixed(2) + '%'; }); } catch(e3) {}
-    }
 
+        var sb = document.getElementById('storageBarFill');
+        var sc = document.getElementById('statStorageCapacity');
+
+        // محاسبه ظرفیت واقعی از navigator.storage.estimate
+        try {
+            if (navigator.storage && navigator.storage.estimate) {
+                navigator.storage.estimate().then(function(est) {
+                    if (!est || !est.quota) {
+                        if (sc) sc.textContent = 'نامشخص';
+                        return;
+                    }
+                    var quotaMB = est.quota / (1024 * 1024);
+                    var usedMB = est.usage ? est.usage / (1024 * 1024) : 0;
+                    if (sc) {
+                        if (quotaMB >= 1024) {
+                            sc.textContent = toPersianNum((quotaMB / 1024).toFixed(1)) + ' GB';
+                        } else {
+                            sc.textContent = toPersianNum(Math.round(quotaMB)) + ' MB';
+                        }
+                    }
+                    if (sb && est.quota > 0) {
+                        sb.style.width = Math.min(100, (est.usage / est.quota) * 100).toFixed(2) + '%';
+                    }
+                }).catch(function() {
+                    if (sc) sc.textContent = 'نامشخص';
+                });
+            } else {
+                if (sc) sc.textContent = '~۵ MB';
+                var percent = Math.min(100, Math.round((totalSize / (5 * 1024 * 1024)) * 100));
+                if (sb) sb.style.width = percent + '%';
+            }
+        } catch(e3) {
+            if (sc) sc.textContent = 'نامشخص';
+        }
+    }
     // ===== ذخیره تنظیمات =====
     document.getElementById('btnSaveSettings').addEventListener('click', function() {
         var e1 = document.getElementById('setTeacherName');
@@ -5753,7 +5783,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     /* ═══════════════════════════════════════════════════
        🔄 به‌روزرسانی از GitHub
        ═══════════════════════════════════════════════════ */
-    var APP_VERSION = '1.2.7';
+    var APP_VERSION = '1.2.8';
     var realLS = window.localStorage, UPD_KEY = 'cmupd_v1';
     var pendingUpdate = null;
 
