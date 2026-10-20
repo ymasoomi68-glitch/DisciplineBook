@@ -5599,7 +5599,32 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         if (ss) ss.textContent = toPersianNum(sizeKB) + ' KB';
         var sb = document.getElementById('storageBarFill');
         if (sb) sb.style.width = percent + '%';
-        try { if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(function(est) { if (est && est.quota && sb) sb.style.width = Math.min(100, totalSize / est.quota * 100).toFixed(2) + '%'; }); } catch(e3) {}
+               try {
+            if (navigator.storage && navigator.storage.estimate) {
+                navigator.storage.estimate().then(function(est) {
+                    var sc = document.getElementById('statStorageCapacity');
+                    if (est && est.quota) {
+                        var quotaMB = est.quota / (1024 * 1024);
+                        if (sc) {
+                            if (quotaMB >= 1024) {
+                                sc.textContent = toPersianNum((quotaMB / 1024).toFixed(1)) + ' GB';
+                            } else {
+                                sc.textContent = toPersianNum(Math.round(quotaMB)) + ' MB';
+                            }
+                        }
+                        if (sb) sb.style.width = Math.min(100, (totalSize / est.quota) * 100).toFixed(2) + '%';
+                    } else {
+                        if (sc) sc.textContent = 'نامشخص';
+                    }
+                }).catch(function() {
+                    var sc = document.getElementById('statStorageCapacity');
+                    if (sc) sc.textContent = 'نامشخص';
+                });
+            } else {
+                var sc = document.getElementById('statStorageCapacity');
+                if (sc) sc.textContent = '~۵ MB';
+            }
+        } catch(e3) {}
     }
 
     // ===== ذخیره تنظیمات =====
@@ -5860,7 +5885,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     /* ═══════════════════════════════════════════════════
        🔄 به‌روزرسانی از GitHub
        ═══════════════════════════════════════════════════ */
-    var APP_VERSION = '1.2.7';
+    var APP_VERSION = '1.2.8';
     var realLS = window.localStorage, UPD_KEY = 'cmupd_v1';
     var pendingUpdate = null;
 

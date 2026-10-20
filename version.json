@@ -1,6 +1,6 @@
 {
   "app": "discipline-book",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "notes": [
     "به‌روزرسانی خودکار"
   ],
@@ -12,11 +12,11 @@
     "manifest-teacher.json"
   ],
   "sha256": {
-    "index.html": "120bf16f44a23866179c4b0f0bead2b90def11ff92c820a3cf5fbf30bb2cad0f",
+    "index.html": "df32b13e3fc2a9fd963a748f7b325b148c0c93877f3b58ee011fb969bfb3be09",
     "teacher.html": "dd5a6b573f2c475a97e969f827fe34bb3b31a67615a2b6283d9e03268dc14b29",
-    "sw.js": "93e6c159b1efb999b4ae8d2e9704aef945613bee157d97491ef97507e1e67c47",
+    "sw.js": "08f4362e5430bc37495a2580ad20049243e0a67ff941e365b5649d0b3044fcf9",
     "manifest.json": "d58ead88489a2b786cbe68165e9e4b0bafc325a35d65b611699800330d2daa31",
     "manifest-teacher.json": "f86a18047a0e754acbf83a1150e2bbb00e55282f2927bdde45e6009c722cda87"
   },
-  "date": "2026-10-18"
+  "date": "2026-10-20"
 }
