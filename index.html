@@ -2401,9 +2401,30 @@ var CMAuth = (function(){
                 function(ex){ showErr(ex.message); });
         });
         var left=lockLeft(); if(left) showErr('به دلیل تلاش‌های ناموفق پیاپی، ' + left + ' ثانیهٔ دیگر دوباره تلاش کنید.');
-        if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(function(){});
-    }
-
+               if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').then(function(reg) {
+                setInterval(function() { reg.update(); }, 60000);
+                reg.addEventListener('updatefound', function() {
+                    var newWorker = reg.installing;
+                    newWorker.addEventListener('statechange', function() {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            if (confirm('✨ نسخه جدید برنامه آماده است. برای به‌روزرسانی، تایید کنید.')) {
+                                window.location.reload();
+                            }
+                        }
+                    });
+                });
+            }).catch(function(){});
+            
+            var refreshing;
+            navigator.serviceWorker.addEventListener('controllerchange', function() {
+                if (refreshing) return;
+                refreshing = true;
+                window.location.reload();
+            });
+        }
+	}
+   
     return {validCode:validCode, signup:signup, login:login, logout:logout, changePassword:changePassword, deleteAccount:deleteAccount, resetUserData:resetUserData,
             store:store, user:curUser, initUI:initUI, toEn:toEn, _sha256:sha256, ready:ready, flush:flush, hasPersian:hasPersian};
 })();
@@ -5890,7 +5911,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     /* ═══════════════════════════════════════════════════
        🔄 به‌روزرسانی از GitHub
        ═══════════════════════════════════════════════════ */
-    var APP_VERSION = '1.2.9';
+    var APP_VERSION = '1.2.10';
     var realLS = window.localStorage, UPD_KEY = 'cmupd_v1';
     var pendingUpdate = null;
 

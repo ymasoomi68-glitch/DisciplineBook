@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════
-   📱 Service Worker - دفتر انضباطی
+   📱 Service Worker - دفتر انضباطی (نسخه هوشمند)
    ═══════════════════════════════════════════════════ */
 
-var CACHE_NAME = 'discipline-book-v22';
+var CACHE_NAME = 'discipline-book-v23'; // release.bat این را تغییر می‌دهد
 var CACHE_FILES = [
     './',
     './index.html',
@@ -21,20 +21,16 @@ var CACHE_FILES = [
 
 // ===== نصب =====
 self.addEventListener('install', function(event) {
-    console.log('✅ Service Worker نصب شد');
     event.waitUntil(
         caches.open(CACHE_NAME).then(function(cache) {
             return cache.addAll(CACHE_FILES);
-        }).catch(function(err) {
-            console.log('خطا در کش کردن:', err);
         })
     );
-    self.skipWaiting();
+    self.skipWaiting(); // نصب فوری نسخه جدید
 });
 
 // ===== فعال‌سازی =====
 self.addEventListener('activate', function(event) {
-    console.log('✅ Service Worker فعال شد');
     event.waitUntil(
         caches.keys().then(function(names) {
             return Promise.all(
@@ -46,44 +42,51 @@ self.addEventListener('activate', function(event) {
             );
         })
     );
-    self.clients.claim();
+    self.clients.claim(); // کنترل فوری تمام تب‌ها
 });
 
-// ===== دریافت =====
+// ===== دریافت (Fetch) =====
 self.addEventListener('fetch', function(event) {
-    // فقط درخواست‌های GET رو کش کن
     if (event.request.method !== 'GET') return;
 
-    // درخواست‌های API سیدا رو کش نکن
-    if (event.request.url.indexOf('/api/') !== -1) return;
-
     var reqUrl = new URL(event.request.url);
-    // درخواست‌های خارج از این سایت (مثل GitHub) را دست نزن
     if (reqUrl.origin !== self.location.origin) return;
-    // فایل نسخه همیشه از شبکه خوانده شود
-    if (/\/(version|licenses)\.json$/.test(reqUrl.pathname)) return;
-    // لیست لایسنس هم همیشه از شبکه خوانده شود (و در کش جمع نشود)
 
-    event.respondWith(
-        caches.match(event.request).then(function(cached) {
-            // اگه توی کش هست، برگردون (Cache First)
-            if (cached) return cached;
+    // ⚡️ استراتژی Network-First برای فایل‌های اصلی (تا همیشه نسخه جدید لود شود)
+    var isCoreFile = reqUrl.pathname.endsWith('/') || 
+                     reqUrl.pathname.endsWith('index.html') || 
+                     reqUrl.pathname.endsWith('teacher.html') ||
+                     reqUrl.pathname.endsWith('version.json') ||
+                     reqUrl.pathname.endsWith('licenses.json');
 
-            // وگرنه از شبکه بگیر
-            return fetch(event.request).then(function(response) {
-                // فقط پاسخ‌های موفق رو کش کن
-                if (!response || response.status !== 200 || response.type === 'opaque') {
-                    return response;
-                }
-
+    if (isCoreFile) {
+        event.respondWith(
+            fetch(event.request).then(function(response) {
+                // اگر آنلاین بودیم، نسخه جدید را کش کن و برگردان
                 var responseClone = response.clone();
                 caches.open(CACHE_NAME).then(function(cache) {
                     cache.put(event.request, responseClone);
                 });
                 return response;
             }).catch(function() {
-                // اگه شبکه نبود، صفحهٔ اصلی رو برگردون
-                return caches.match('./index.html');
+                // اگر آفلاین بودیم، از کش برگردان
+                return caches.match(event.request);
+            })
+        );
+        return;
+    }
+
+    // 🔄 استراتژی Cache-First برای بقیه فایل‌ها (عکس‌ها، فونت‌ها و...)
+    event.respondWith(
+        caches.match(event.request).then(function(cached) {
+            if (cached) return cached;
+            return fetch(event.request).then(function(response) {
+                if (!response || response.status !== 200 || response.type === 'opaque') return response;
+                var responseClone = response.clone();
+                caches.open(CACHE_NAME).then(function(cache) {
+                    cache.put(event.request, responseClone);
+                });
+                return response;
             });
         })
     );
