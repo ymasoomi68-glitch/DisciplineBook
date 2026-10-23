@@ -2,7 +2,7 @@
    📱 Service Worker - دفتر انضباطی (نسخه هوشمند)
    ═══════════════════════════════════════════════════ */
 
-var CACHE_NAME = 'discipline-book-v23'; // release.bat این را تغییر می‌دهد
+var CACHE_NAME = 'discipline-book-v24'; // release.bat این را تغییر می‌دهد
 var CACHE_FILES = [
     './',
     './index.html',

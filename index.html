@@ -540,6 +540,42 @@
     body.dark table.data-table th { background: #0f172a; }
     body.dark .class-card-grade { background: #0f172a; }
 
+
+    /* ═══ پیش‌نمایش چاپ ═══ */
+    .print-preview { padding: 0 !important; flex-direction: column; align-items: stretch !important; justify-content: flex-start !important; background: #475569 !important; z-index: 3500 !important; }
+    .pv-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #1e293b; color: #fff; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,.35); }
+    .pv-bar .pv-title { flex: 1; font-weight: 700; font-size: 14px; text-align: center; }
+    .pv-bar .btn { padding: 9px 16px; font-size: 14px; font-weight: 700; }
+    .pv-bar .btn:disabled { opacity: .5; }
+    .pv-bar .btn.btn-outline { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.55); }
+    .pv-body { flex: 1; overflow: auto; padding: 14px 8px 30px; -webkit-overflow-scrolling: touch; }
+    .pv-wrap { position: relative; margin: 0 auto; direction: ltr; }
+    .pv-wrap iframe { position: absolute; top: 0; left: 0; border: 0; background: transparent; transform-origin: top left; }
+
+    /* ═══ دکمه‌های رفتار در ردیف دانش‌آموز ═══ */
+    .behavior-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .bh-btn { border: 1.5px solid; border-radius: 9px; padding: 7px 11px; font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; background: var(--card); white-space: nowrap; transition: transform .12s; }
+    .bh-btn:active { transform: scale(.95); }
+    .bh-btn.pos { border-color: rgba(16,185,129,.6); color: #059669; }
+    .bh-btn.neg { border-color: rgba(239,68,68,.6); color: #dc2626; }
+    .bh-btn.pos:hover { background: #10b981; color: #fff; }
+    .bh-btn.neg:hover { background: #ef4444; color: #fff; }
+    @media (max-width: 600px) {
+        .behavior-row { flex-wrap: wrap; }
+        .behavior-row .att-name { min-width: 0; }
+        .behavior-actions { order: 5; width: 100%; }
+        .behavior-actions .bh-btn { flex: 1; padding: 9px 6px; font-size: 13px; }
+    }
+
+    /* ═══ یادآوری پشتیبان‌گیری ═══ */
+    .bk-banner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border-radius: 18px; padding: 14px 16px; margin-bottom: 14px; color: #fff; background: linear-gradient(135deg, #d97706, #f59e0b 60%, #fbbf24); box-shadow: 0 10px 22px rgba(217,119,6,.28); }
+    .bk-banner .bk-ico { font-size: 28px; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; border-radius: 16px; background: rgba(255,255,255,.22); flex-shrink: 0; }
+    .bk-banner .bk-txt { flex: 1; min-width: 150px; display: flex; flex-direction: column; gap: 3px; }
+    .bk-banner .bk-txt b { font-size: 15px; } .bk-banner .bk-txt small { font-size: 12px; opacity: .92; }
+    .bk-banner .bk-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .bk-banner button { border: 0; border-radius: 10px; padding: 9px 14px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .bk-banner .bk-go { background: #fff; color: #b45309; } .bk-banner .bk-later { background: rgba(255,255,255,.25); color: #fff; }
+
     /* === افزودنی‌های CSS قدم‌های بعدی اینجا === */
 
     /* ═══════════════════════════════════════════════════
@@ -1421,6 +1457,11 @@
                 </div>
             </section>
             <button class="inbox-banner" id="btnInbox" type="button"><span class="ib-ico">📨</span><span class="ib-txt"><b>دریافت گزارش حضور و غیاب از معلم‌ها</b><small id="inboxHomeStatus"></small></span><span class="ib-go">‹</span></button>
+            <div class="bk-banner" id="bkBanner" style="display:none;">
+                <span class="bk-ico">💾</span>
+                <span class="bk-txt"><b>زمان پشتیبان‌گیری رسیده است</b><small id="bkBannerInfo"></small></span>
+                <span class="bk-btns"><button type="button" class="bk-go" id="bkGo">📥 پشتیبان‌گیری</button><button type="button" class="bk-later" id="bkLater">⏰ فردا یادآوری کن</button></span>
+            </div>
             <div class="home-grid">
                 <button class="h-tile t-classes" data-go="classes"><span class="ht-ico">📚</span><b>کلاس‌ها</b><small>ساخت و مدیریت کلاس</small></button>
                 <button class="h-tile t-students" data-go="students"><span class="ht-ico">👥</span><b>دانش‌آموزان</b><small>لیست و ویرایش دانش‌آموزان</small></button>
@@ -1664,6 +1705,7 @@
                 <button class="btn btn-outline btn-sm" id="btnReportReset">🔄 پاک کردن فیلتر</button>
                 <button class="btn btn-primary btn-sm" id="btnReportPrintAll">🖨️ چاپ همه گزارش‌ها</button>
                 <button class="btn btn-success btn-sm" id="btnReportDownloadAll">⬇️ دانلود PDF گزارش‌ها</button>
+                <button class="btn btn-primary btn-sm" id="btnReportAttentionAll">📑 گزارش همهٔ کلاس‌ها: توجه ویژه و نمونه‌ها</button>
             </div>
 
             <!-- تب‌ها -->
@@ -1752,6 +1794,31 @@
                     <button class="btn btn-success" id="btnFullBackup" style="width:100%;margin-bottom:8px;">📥 دانلود فایل پشتیبان کامل</button>
                     <button class="btn btn-outline" id="btnRestoreBackup" style="width:100%;">📤 بازیابی از فایل پشتیبان</button>
                     <input type="file" id="restoreFileInput" accept=".json" style="display:none;">
+                </div>
+
+                <!-- کارت: یادآوری پشتیبان‌گیری -->
+                <div class="settings-card">
+                    <div class="settings-card-title">🔔 یادآوری پشتیبان‌گیری</div>
+                    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.7;">
+                        در زمان تعیین‌شده، در صفحهٔ اصلی برنامه یادآوری پشتیبان‌گیری نمایش داده می‌شود.
+                    </p>
+                    <div class="settings-item">
+                        <span class="settings-item-label">فعال بودن یادآوری</span>
+                        <input type="checkbox" id="bkRemOn" style="width:22px;height:22px;accent-color:var(--primary);">
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-item-label">هر چند روز یک بار</span>
+                        <select class="form-select" id="bkRemDays" style="max-width:130px;"></select>
+                    </div>
+                    <div class="settings-item">
+                        <span class="settings-item-label">ساعت یادآوری</span>
+                        <input type="time" class="form-input" id="bkRemTime" style="max-width:130px;direction:ltr;text-align:center;">
+                    </div>
+                    <div class="settings-item" style="border-bottom:none;">
+                        <span class="settings-item-label">آخرین پشتیبان</span>
+                        <span class="settings-item-value" id="bkRemLast">—</span>
+                    </div>
+                    <p style="font-size:12px;color:var(--text-muted);margin-top:6px;" id="bkRemNext"></p>
                 </div>
 
                 <!-- کارت ۳: آمار کلی -->
@@ -3304,18 +3371,51 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         });
     }
 
+    // پیش‌نمایش گزارش؛ دکمهٔ «چاپ» بالای صفحه است و چاپ فقط با زدن آن انجام می‌شود
     function openPrintWindow(html) {
-        var iframe = document.createElement('iframe');
-        iframe.style.cssText = 'position:fixed;left:-10000px;top:0;width:3000px;height:3000px;border:0;visibility:hidden;';
-        document.body.appendChild(iframe);
+        var land = /size:\s*A4\s+landscape/i.test(html);
+        var PW = land ? 1123 : 794;
+        var ov = document.createElement('div');
+        ov.className = 'modal-overlay open print-preview';
+        ov.innerHTML =
+            '<div class="pv-bar"><button type="button" class="btn btn-primary" id="pvPrint" disabled>🖨️ چاپ</button>' +
+            '<div class="pv-title">پیش‌نمایش گزارش</div>' +
+            '<button type="button" class="btn btn-outline" id="pvClose">✕ بستن</button></div>' +
+            '<div class="pv-body"><div class="pv-wrap" id="pvWrap"><iframe id="pvFrame" style="width:' + PW + 'px;height:600px;"></iframe></div></div>';
+        document.body.appendChild(ov);
+        var iframe = ov.querySelector('#pvFrame'), wrap = ov.querySelector('#pvWrap'), btnP = ov.querySelector('#pvPrint'), body = ov.querySelector('.pv-body');
+        function close() { document.removeEventListener('keydown', onKey); if (ov.parentNode) ov.parentNode.removeChild(ov); }
+        function onKey(e) { if (e.key === 'Escape') close(); }
+        document.addEventListener('keydown', onKey);
+        ov.querySelector('#pvClose').addEventListener('click', close);
         var doc = iframe.contentWindow.document;
         doc.open(); doc.write(html); doc.close();
+        function scaleSheet() {
+            var avail = Math.max(240, body.clientWidth - 16), sc = Math.min(1, avail / PW);
+            var h = doc.documentElement.scrollHeight || 1123;
+            iframe.style.height = h + 'px';
+            iframe.style.transform = 'scale(' + sc + ')';
+            wrap.style.width = Math.round(PW * sc) + 'px';
+            wrap.style.height = Math.round(h * sc) + 'px';
+        }
         setTimeout(function() {
             try { fitDocPages(doc, html); } catch(e) { console.error(e); }
+            try {
+                var mm = html.match(/@page\s*\{[^}]*?margin:\s*([\d.]+)cm\s+([\d.]+)cm\s+([\d.]+)cm\s+([\d.]+)cm/i) || [0, 0.8, 1, 0.3, 1];
+                var st = doc.createElement('style');
+                // فقط روی صفحهٔ نمایش اثر دارد؛ در چاپ اثری ندارد
+                st.textContent = '@media screen{html{background:#94a3b8;}body{margin:0 !important;padding:12px 0;}' +
+                    'body>div{background:#fff;margin:0 auto 14px !important;box-sizing:content-box;box-shadow:0 2px 14px rgba(0,0,0,.35);padding:' + mm[1] + 'cm ' + mm[2] + 'cm ' + mm[3] + 'cm ' + mm[4] + 'cm;}}';
+                doc.head.appendChild(st);
+            } catch(e) {}
+            scaleSheet();
+            btnP.disabled = false;
+        }, 600);
+        window.addEventListener('resize', function rs() { if (!ov.parentNode) { window.removeEventListener('resize', rs); return; } try { scaleSheet(); } catch(e) {} });
+        btnP.addEventListener('click', function() {
             try { iframe.contentWindow.focus(); iframe.contentWindow.print(); }
             catch(e) { alert('❌ خطا در چاپ: ' + e.message); }
-            setTimeout(function() { if (iframe.parentNode) iframe.parentNode.removeChild(iframe); }, 3000);
-        }, 600);
+        });
     }
 
         /* ═══════════════════════════════════════════════════
@@ -4378,25 +4478,31 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     var behaviorFilterFrom = '';
     var behaviorFilterTo = '';
 
+    // دلایل پیش‌فرض: رفتارهایی که معاون آموزشی در بیرون از کلاس و حیاط مدرسه ثبت می‌کند
     var POSITIVE_REASONS = [
-        'شرکت فعال در کلاس',
-        'کمک به همکلاسی',
-        'انجام تکالیف',
-        'نظم و انضباط',
-        'پیشرفت تحصیلی',
-        'خلاقیت و نوآوری',
-        'احترام به معلم',
-        'همکاری گروهی'
+        'رعایت نظم و صف در حیاط',
+        'حضور به‌موقع در صف و مراسم صبحگاه',
+        'رعایت نظم در راهرو و رفت‌وآمد',
+        'رعایت نظافت و بهداشت محیط مدرسه',
+        'کمک به دانش‌آموزان یا همکلاسی‌ها',
+        'امانت‌داری (تحویل وسایل پیداشده)',
+        'رعایت پوشش و ظاهر مناسب مدرسه',
+        'احترام به معلمان و کادر مدرسه',
+        'مشارکت در فعالیت‌ها و مراسم مدرسه',
+        'حفظ اموال و فضای سبز مدرسه'
     ];
     var NEGATIVE_REASONS = [
-        'بی‌نظمی',
-        'صحبت در کلاس',
-        'عدم انجام تکالیف',
-        'تأخیر',
-        'غیبت غیرموجه',
-        'بی‌احترامی',
-        'عدم توجه به درس',
-        'شلوغ کردن کلاس'
+        'ورود با تأخیر به مدرسه',
+        'بی‌نظمی در صف و مراسم صبحگاه',
+        'شلوغی و سروصدا در راهرو',
+        'خروج از کلاس یا مدرسه بدون مجوز',
+        'درگیری و پرخاشگری',
+        'بی‌احترامی به معلم یا کادر مدرسه',
+        'آسیب به اموال مدرسه',
+        'رعایت نکردن پوشش و ظاهر مدرسه',
+        'همراه داشتن وسایل ممنوعه',
+        'آلوده کردن محیط و رعایت نکردن بهداشت',
+        'استفاده از الفاظ نامناسب'
     ];
 
     // دلایلی که کاربر خودش نوشته است (مشترک بین همهٔ سال‌ها)
@@ -4535,11 +4641,22 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
             html += '<div class="score-badge positive" title="تعداد رفتار مثبت"><div class="sb-num">' + toPersianNum(st.positive) + '</div><div class="sb-label">مثبت</div></div>';
             html += '<div class="score-badge negative" title="تعداد رفتار منفی"><div class="sb-num">' + toPersianNum(st.negative) + '</div><div class="sb-label">منفی</div></div>';
             html += '</div>';
+            html += '<div class="behavior-actions">';
+            html += '<button type="button" class="bh-btn pos" data-act="positive" title="ثبت رفتار مثبت">🌟 رفتار مثبت</button>';
+            html += '<button type="button" class="bh-btn neg" data-act="negative" title="ثبت رفتار منفی">⚠️ رفتار منفی</button>';
+            html += '</div>';
             html += '</div>';
         });
         html += '</div>';
 
         container.innerHTML = html;
+
+        container.querySelectorAll('.bh-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                openBehaviorModal(btn.closest('.behavior-row').getAttribute('data-sid'), btn.getAttribute('data-act'));
+            });
+        });
 
         container.querySelectorAll('.behavior-row').forEach(function(row) {
             row.addEventListener('click', function() {
@@ -4613,7 +4730,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     // ═══ مودال ثبت رفتار ═══
     var behaviorFormType = 'positive';
 
-    function openBehaviorModal(preStudentId) {
+    function openBehaviorModal(preStudentId, preType) {
         if (currentBehaviorClass < 0) { alert('ابتدا یک کلاس انتخاب کنید.'); return; }
         var cls = appData.classes[currentBehaviorClass];
 
@@ -4630,9 +4747,9 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         document.getElementById('behaviorDate').value = getTodayJalaliStr();
         document.getElementById('behaviorReason').value = '';
 
-        behaviorFormType = 'positive';
+        behaviorFormType = preType === 'negative' ? 'negative' : 'positive';
         document.querySelectorAll('.type-btn').forEach(function(b) {
-            b.classList.toggle('active', b.getAttribute('data-type') === 'positive');
+            b.classList.toggle('active', b.getAttribute('data-type') === behaviorFormType);
         });
 
         renderQuickReasons();
@@ -5256,16 +5373,9 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         });
     }
 
-    // ===== تب ۴: دانش‌آموزان نیازمند توجه و نمونه‌ها =====
-    function renderAttention(cls) {
-        var content = document.getElementById('reportContent');
-        var students = cls.students || [];
-        if (students.length < 1) {
-            content.innerHTML = '<div class="card"><div class="report-empty">این کلاس دانش‌آموزی ندارد</div></div>';
-            return;
-        }
+    // داده‌های «نیازمند توجه و نمونه‌ها» برای یک کلاس
+    function attentionData(cls) {
         var rows = classRows(cls);
-
         function top(list, val, n) {
             return list.filter(function(r) { return val(r) > 0; })
                 .sort(function(a, b) { return val(b) - val(a); }).slice(0, n || 5);
@@ -5278,6 +5388,56 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
             { title: '🌟 بیشترین رفتار مثبت', color: '#059669', bg: '#ecfdf5', rows: top(rows, function(r) { return r.stats.behavior.positive; }), unit: 'مورد', val: function(r) { return r.stats.behavior.positive; } }
         ];
         var perfect = rows.filter(function(r) { var a = r.stats.attendance; return a.present + a.late + a.absent > 0 && a.absent === 0 && a.late === 0; });
+        return { groups: groups, perfect: perfect };
+    }
+
+    // گزارش همهٔ کلاس‌ها (هر کلاس در یک صفحهٔ جدا) ← پیش‌نمایش و چاپ
+    function printAttentionAllClasses() {
+        var list = appData.classes.filter(function(c) { return (c.students || []).length; });
+        if (!list.length) { alert('❌ کلاسی با دانش‌آموز وجود ندارد.'); return; }
+        var css = cardCss() +
+            '.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}' +
+            '.box{border:1px solid #000;border-radius:6px;padding:6px 8px;}' +
+            '.box-t{font-weight:bold;font-size:12pt;margin-bottom:4px;padding-bottom:3px;border-bottom:1px solid #999;}' +
+            '.box .r{display:flex;justify-content:space-between;gap:8px;font-size:11pt;padding:2px 0;}' +
+            '.box .none{font-size:10.5pt;color:#666;}';
+        var html = '<html><head><meta charset="UTF-8"><title>گزارش توجه ویژه و نمونه‌ها - همهٔ کلاس‌ها</title><style>' + css + '</style></head><body>';
+        list.forEach(function(cls) {
+            var ad = attentionData(cls);
+            html += '<div class="page">';
+            html += '<div class="h">دانش‌آموزان نیازمند توجه و نمونه‌ها - کلاس ' + escapeHtml(cls.className) + '</div>';
+            html += yearLine();
+            html += '<div class="info-block"><div class="il"><span><b>کلاس:</b> ' + escapeHtml(cls.className) + (cls.gradeName ? ' - ' + escapeHtml(cls.gradeName) : '') + '</span>';
+            html += '<span><b>تعداد دانش‌آموزان:</b> ' + toPersianNum((cls.students || []).length) + '</span>';
+            html += '<span><b>بازهٔ گزارش:</b> ' + monthRangeText(reportFilterFrom, reportFilterTo) + '</span></div></div>';
+            html += '<div class="grid">';
+            ad.groups.forEach(function(g) {
+                html += '<div class="box"><div class="box-t" style="color:' + g.color + ';">' + g.title + '</div>';
+                if (!g.rows.length) html += '<div class="none">موردی ثبت نشده</div>';
+                g.rows.forEach(function(r, i) {
+                    html += '<div class="r"><span>' + toPersianNum(i + 1) + '. ' + escapeHtml(fullName(r.student)) + '</span><b style="color:' + g.color + ';white-space:nowrap;">' + toPersianNum(g.val(r)) + ' ' + g.unit + '</b></div>';
+                });
+                html += '</div>';
+            });
+            html += '<div class="box"><div class="box-t" style="color:#059669;">🏅 حضور کامل (بدون غیبت و تأخیر)</div>';
+            if (!ad.perfect.length) html += '<div class="none">موردی نیست</div>';
+            else html += '<div style="font-size:11pt;line-height:1.9;">' + ad.perfect.map(function(r) { return escapeHtml(fullName(r.student)); }).join('، ') + '</div>';
+            html += '</div></div>';
+            html += '</div>';
+        });
+        html += '</body></html>';
+        openPrintWindow(html);
+    }
+
+    // ===== تب ۴: دانش‌آموزان نیازمند توجه و نمونه‌ها =====
+    function renderAttention(cls) {
+        var content = document.getElementById('reportContent');
+        var students = cls.students || [];
+        if (students.length < 1) {
+            content.innerHTML = '<div class="card"><div class="report-empty">این کلاس دانش‌آموزی ندارد</div></div>';
+            return;
+        }
+        var ad = attentionData(cls), groups = ad.groups, perfect = ad.perfect;
 
         var html = '<div class="report-section"><div class="report-section-title">⭐ دانش‌آموزان نیازمند توجه و نمونه‌ها</div>';
         html += '<div class="compare-grid" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr));">';
@@ -5379,7 +5539,6 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     function printAllStudentReports(cls) {
         var students = cls.students || [];
         if (students.length === 0) { alert('❌ کلاس دانش‌آموز ندارد.'); return; }
-        if (!confirm('چاپ گزارش انضباطی برای ' + students.length + ' دانش‌آموز؟')) return;
 
         var html = '<html><head><meta charset="UTF-8"><title>گزارش‌های انضباطی</title>';
         html += '<style>' + cardCss() + '</style></head><body>';
@@ -5534,6 +5693,8 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         printAllStudentReports(appData.classes[currentReportClass]);
     });
 
+    document.getElementById('btnReportAttentionAll').addEventListener('click', printAttentionAllClasses);
+
     document.getElementById('btnReportDownloadAll').addEventListener('click', function() {
         if (currentReportClass < 0) { alert('❌ ابتدا یک کلاس انتخاب کنید.'); return; }
         downloadAllStudentPdfs(appData.classes[currentReportClass]);
@@ -5580,6 +5741,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
 
     function renderSettings() {
         var el;
+        try { renderBkRemSettings(); } catch(e0) {}
 
         el = document.getElementById('setTeacherName');
         if (el) el.value = appSettings.teacherName || '';
@@ -5653,6 +5815,78 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         } catch(e3) {}
     }
 
+    /* ═══════════════════════════════════════════════════
+       🔔 یادآوری پشتیبان‌گیری
+       ═══════════════════════════════════════════════════ */
+    var BKREM_KEY = 'cm_bkrem_v1';
+    var bkRem = { on: true, days: 7, time: '12:00', last: 0, snooze: 0, base: 0 };
+    function saveBkRem() { try { localStorage.setItem(BKREM_KEY, JSON.stringify(bkRem)); } catch(e) {} }
+    function loadBkRem() {
+        try { var raw = localStorage.getItem(BKREM_KEY); if (raw) bkRem = Object.assign(bkRem, JSON.parse(raw)); } catch(e) {}
+        if (!bkRem.base) { bkRem.base = Date.now(); saveBkRem(); }
+    }
+    // زمان یادآوری: N روز پس از آخرین پشتیبان (یا پس از شروع استفاده) در ساعت تعیین‌شده
+    function bkDueAt() {
+        var d = new Date(bkRem.last || bkRem.base);
+        d.setDate(d.getDate() + (parseInt(bkRem.days, 10) || 7));
+        var p = String(bkRem.time || '12:00').split(':');
+        d.setHours(parseInt(p[0], 10) || 0, parseInt(p[1], 10) || 0, 0, 0);
+        return d.getTime();
+    }
+    function bkIsDue() {
+        if (!bkRem.on) return false;
+        if (!appData.classes || !appData.classes.length) return false;
+        var now = Date.now();
+        return now >= bkDueAt() && now >= (bkRem.snooze || 0);
+    }
+    function bkAgo(ts) {
+        if (!ts) return 'تاکنون پشتیبان‌گیری نشده است';
+        var days = Math.floor((Date.now() - ts) / 86400000);
+        return days <= 0 ? 'امروز' : toPersianNum(days) + ' روز پیش';
+    }
+    function refreshBkBanner() {
+        var el = document.getElementById('bkBanner');
+        if (!el) return;
+        var due = bkIsDue();
+        el.style.display = due ? 'flex' : 'none';
+        if (due) {
+            var inf = document.getElementById('bkBannerInfo');
+            if (inf) inf.textContent = 'آخرین پشتیبان: ' + bkAgo(bkRem.last) + ' — برای جلوگیری از از دست رفتن اطلاعات، فایل پشتیبان بگیرید.';
+        }
+    }
+    function bkFmt(ts) { return ts ? toPersianNum(dateToJalaliStr(new Date(ts)).replace(/-/g, '/')) : '—'; }
+    function renderBkRemSettings() {
+        var on = document.getElementById('bkRemOn'), dy = document.getElementById('bkRemDays'), tm = document.getElementById('bkRemTime');
+        if (!on || !dy || !tm) return;
+        if (!dy.options.length) {
+            dy.innerHTML = [[1, 'هر روز'], [2, 'هر ۲ روز'], [3, 'هر ۳ روز'], [5, 'هر ۵ روز'], [7, 'هر هفته'], [10, 'هر ۱۰ روز'], [14, 'هر ۲ هفته'], [30, 'هر ماه']]
+                .map(function(o) { return '<option value="' + o[0] + '">' + o[1] + '</option>'; }).join('');
+        }
+        on.checked = !!bkRem.on; dy.value = String(bkRem.days); tm.value = bkRem.time || '12:00';
+        dy.disabled = tm.disabled = !bkRem.on;
+        var l = document.getElementById('bkRemLast'); if (l) l.textContent = bkRem.last ? bkAgo(bkRem.last) + ' (' + bkFmt(bkRem.last) + ')' : 'هنوز انجام نشده';
+        var n = document.getElementById('bkRemNext');
+        if (n) {
+            var due = bkDueAt(), t = new Date(due);
+            n.textContent = bkRem.on ? 'یادآوری بعدی: ' + bkFmt(due) + ' ساعت ' + toPersianNum(('0' + t.getHours()).slice(-2) + ':' + ('0' + t.getMinutes()).slice(-2)) : 'یادآوری غیرفعال است.';
+        }
+    }
+    (function() {
+        function upd() {
+            var on = document.getElementById('bkRemOn'), dy = document.getElementById('bkRemDays'), tm = document.getElementById('bkRemTime');
+            bkRem.on = !!on.checked;
+            bkRem.days = parseInt(dy.value, 10) || 7;
+            if (/^\d{2}:\d{2}$/.test(tm.value)) bkRem.time = tm.value;
+            bkRem.snooze = 0;
+            saveBkRem(); renderBkRemSettings(); refreshBkBanner();
+        }
+        ['bkRemOn', 'bkRemDays', 'bkRemTime'].forEach(function(id) { var e = document.getElementById(id); if (e) e.addEventListener('change', upd); });
+        var go = document.getElementById('bkGo'); if (go) go.addEventListener('click', function() { document.getElementById('btnFullBackup').click(); });
+        var lt = document.getElementById('bkLater'); if (lt) lt.addEventListener('click', function() { bkRem.snooze = Date.now() + 24 * 3600 * 1000; saveBkRem(); refreshBkBanner(); });
+        setInterval(function() { try { refreshBkBanner(); } catch(e) {} }, 60000);
+        document.addEventListener('visibilitychange', function() { if (!document.hidden) { try { refreshBkBanner(); } catch(e) {} } });
+    })();
+
     // ===== ذخیره تنظیمات =====
     document.getElementById('btnSaveSettings').addEventListener('click', function() {
         var e1 = document.getElementById('setTeacherName');
@@ -5712,6 +5946,8 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         link.click();
         document.body.removeChild(link);
         setTimeout(function() { URL.revokeObjectURL(link.href); }, 1000);
+
+        bkRem.last = Date.now(); bkRem.snooze = 0; saveBkRem(); try { refreshBkBanner(); renderBkRemSettings(); } catch(e) {}
 
         var self = this, orig = self.textContent;
         self.textContent = '✅ دانلود شد';
@@ -5911,7 +6147,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     /* ═══════════════════════════════════════════════════
        🔄 به‌روزرسانی از GitHub
        ═══════════════════════════════════════════════════ */
-    var APP_VERSION = '1.2.10';
+    var APP_VERSION = '1.2.11';
     var realLS = window.localStorage, UPD_KEY = 'cmupd_v1';
     var pendingUpdate = null;
 
@@ -6032,6 +6268,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         e = document.getElementById('homeStudents'); if (e) e.textContent = toPersianNum(st);
         e = document.getElementById('homeYear'); if (e) e.textContent = yearLabel(yearsState.current);
         try { updateInboxStatus(); } catch(x) {}
+        try { refreshBkBanner(); } catch(x) {}
     }
     document.querySelectorAll('[data-go]').forEach(function(b) {
         b.addEventListener('click', function() { showPage(b.getAttribute('data-go')); });
@@ -6222,6 +6459,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     loadCustomReasons();
     loadBehaviors();
     loadSettings();
+    loadBkRem();
     applyFontSize(appSettings.fontSize);
 
     try {
