@@ -3637,16 +3637,28 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         });
     }
 
-    // کادر ثبت ساعت ورود به کلاس برای تأخیر (ساعت اختیاری است؛ خالی = تأخیر بدون ساعت)
+    // کادر ثبت ساعت ورود به کلاس برای تأخیر (ساعت اجباری است؛ پیش‌فرض: ساعت فعلی سیستم یا ساعت ثبت‌شدهٔ قبلی)
+    function lateTimeOptions(max, sel) {
+        var o = '';
+        for (var i = 0; i < max; i++) { var v = (i < 10 ? '0' : '') + i; o += '<option value="' + v + '"' + (i === sel ? ' selected' : '') + '>' + faTime(v) + '</option>'; }
+        return o;
+    }
     function askLateTime(studentName, hasLate, curTime, cb) {
+        var now = new Date(), hh = now.getHours(), mm = now.getMinutes();
+        var m0 = /^(\d{2}):(\d{2})$/.exec(curTime || '');
+        if (m0 && +m0[1] < 24 && +m0[2] < 60) { hh = +m0[1]; mm = +m0[2]; }
         var modal = document.createElement('div');
         modal.className = 'modal-overlay open';
+        var selStyle = 'font-size:24px;font-weight:700;padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;min-width:84px;text-align:center;text-align-last:center;';
         modal.innerHTML =
             '<div class="modal" style="max-width:420px;">' +
                 '<h2 class="modal-title">⏰ ساعت ورود به کلاس</h2>' +
-                '<div style="font-size:14px;font-weight:600;margin-bottom:10px;">' + escapeHtml(studentName) + '</div>' +
-                '<input type="text" class="form-input" id="lateTimeInput" inputmode="numeric" autocomplete="off" style="direction:ltr;text-align:center;font-size:20px;" placeholder="مثلاً ۰۷:۴۵" value="' + escapeHtml(curTime || '') + '">' +
-                '<div id="lateTimeErr" style="color:#dc2626;font-size:12.5px;min-height:18px;margin-top:4px;"></div>' +
+                '<div style="font-size:14px;font-weight:600;margin-bottom:12px;">' + escapeHtml(studentName) + '</div>' +
+                '<div style="direction:ltr;display:flex;align-items:center;justify-content:center;gap:10px;margin:6px 0 14px;">' +
+                    '<select id="lateTimeH" aria-label="ساعت" style="' + selStyle + '">' + lateTimeOptions(24, hh) + '</select>' +
+                    '<span style="font-size:26px;font-weight:700;">:</span>' +
+                    '<select id="lateTimeM" aria-label="دقیقه" style="' + selStyle + '">' + lateTimeOptions(60, mm) + '</select>' +
+                '</div>' +
                 '<div class="modal-actions">' +
                     '<button class="btn btn-primary" id="lateTimeOk">ثبت تأخیر</button>' +
                     (hasLate ? '<button class="btn btn-outline" id="lateTimeClear">پاک کردن تأخیر</button>' : '') +
@@ -3654,20 +3666,13 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
                 '</div>' +
             '</div>';
         document.body.appendChild(modal);
-        var inp = modal.querySelector('#lateTimeInput'), err = modal.querySelector('#lateTimeErr');
+        var selH = modal.querySelector('#lateTimeH'), selM = modal.querySelector('#lateTimeM');
         function close() { if (modal.parentNode) modal.parentNode.removeChild(modal); }
-        function submit() {
-            var t = parseLateTime(inp.value);
-            if (t === null) { err.textContent = 'ساعت را به شکل ۰۷:۴۵ بنویسید (ساعت ۰ تا ۲۳، دقیقه ۰۰ تا ۵۹).'; return; }
-            close(); cb('set', t);
-        }
-        modal.querySelector('#lateTimeOk').addEventListener('click', submit);
-        inp.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+        modal.querySelector('#lateTimeOk').addEventListener('click', function() { var t = selH.value + ':' + selM.value; close(); cb('set', t); });
         var clr = modal.querySelector('#lateTimeClear');
         if (clr) clr.addEventListener('click', function() { close(); cb('clear'); });
         modal.querySelector('#lateTimeCancel').addEventListener('click', close);
         modal.addEventListener('click', function(e) { if (e.target === modal) close(); });
-        setTimeout(function() { try { inp.focus(); inp.select(); } catch(e) {} }, 50);
     }
 
     function askAbsenceType(studentName, current, cb) {
@@ -5885,7 +5890,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     /* ═══════════════════════════════════════════════════
        🔄 به‌روزرسانی از GitHub
        ═══════════════════════════════════════════════════ */
-    var APP_VERSION = '1.2.8';
+    var APP_VERSION = '1.2.9';
     var realLS = window.localStorage, UPD_KEY = 'cmupd_v1';
     var pendingUpdate = null;
 

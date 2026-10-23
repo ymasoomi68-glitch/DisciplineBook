@@ -208,8 +208,11 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
 <!-- ساعت ورود (تأخیر) -->
 <div class="ov" id="ovLate"><div class="sheet">
     <h2 id="lateName">⏰ ساعت ورود به کلاس</h2>
-    <input type="text" id="inLateTime" inputmode="numeric" autocomplete="off" style="direction:ltr;text-align:center;font-size:20px;" placeholder="مثلاً ۰۷:۴۵">
-    <div id="lateErr" style="color:#dc2626;font-size:12.5px;min-height:18px;margin-bottom:6px;"></div>
+    <div style="direction:ltr;display:flex;align-items:center;justify-content:center;gap:10px;margin:6px 0 14px;">
+        <select id="lateH" aria-label="ساعت" style="font-size:24px;font-weight:700;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:#fff;min-width:84px;text-align:center;text-align-last:center;"></select>
+        <span style="font-size:26px;font-weight:700;">:</span>
+        <select id="lateM" aria-label="دقیقه" style="font-size:24px;font-weight:700;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:#fff;min-width:84px;text-align:center;text-align-last:center;"></select>
+    </div>
     <button class="btn block" id="lateOk" style="background:#d97706;">⏰ ثبت تأخیر</button>
     <button class="btn o block" id="lateClear">پاک کردن تأخیر</button>
     <button class="btn o block" data-close="ovLate">انصراف</button>
@@ -348,6 +351,7 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
 
     $('main').addEventListener('click', function(e) {
         var t = e.target, c = curCls();
+        if (t.closest && !t.classList.contains('ab') && t.closest('.ab')) t = t.closest('.ab');
         if (t.classList.contains('chip')) { cfg.cur = t.getAttribute('data-c'); saveCfg(); render(); return; }
         if (t.id === 'dPrev') { curDate = shift(curDate, -1); render(); return; }
         if (t.id === 'dNext') { curDate = shift(curDate, 1); render(); return; }
@@ -369,22 +373,29 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
 
     /* ===== ساعت ورود برای تأخیر ===== */
     var lateCtx = null;
+    function fillTimeSel(id, max, sel) {
+        var o = '';
+        for (var i = 0; i < max; i++) { var v = (i < 10 ? '0' : '') + i; o += '<option value="' + v + '"' + (i === sel ? ' selected' : '') + '>' + faTime(v) + '</option>'; }
+        $(id).innerHTML = o;
+    }
     function askLate(c, sid) {
         var s = c.students.filter(function(x) { return x.id === sid; })[0];
         lateCtx = { c: c, sid: sid };
         $('lateName').textContent = '⏰ ساعت ورود — ' + ((s.family || '') + ' ' + (s.name || ''));
-        $('inLateTime').value = ltMap(c)[sid] || ''; $('lateErr').textContent = '';
+        /* پیش‌فرض: ساعت فعلی سیستم؛ اگر قبلاً ساعت ثبت شده، همان */
+        var now = new Date(), hh = now.getHours(), mm = now.getMinutes();
+        var m0 = /^(\d{2}):(\d{2})$/.exec(ltMap(c)[sid] || '');
+        if (m0 && +m0[1] < 24 && +m0[2] < 60) { hh = +m0[1]; mm = +m0[2]; }
+        fillTimeSel('lateH', 24, hh); fillTimeSel('lateM', 60, mm);
         $('lateClear').style.display = dayMap(c)[sid] === 'late' ? '' : 'none';
-        openOv('ovLate'); setTimeout(function() { $('inLateTime').focus(); $('inLateTime').select(); }, 80);
+        openOv('ovLate');
     }
     function lateSubmit() {
-        var t = parseLateTime($('inLateTime').value);
-        if (t === null) { $('lateErr').textContent = 'ساعت را به شکل ۰۷:۴۵ بنویسید (ساعت ۰ تا ۲۳، دقیقه ۰۰ تا ۵۹).'; return; }
+        var t = $('lateH').value + ':' + $('lateM').value;
         var dm = dayMap(lateCtx.c, true); dm[lateCtx.sid] = 'late'; setLT(lateCtx.c, lateCtx.sid, t);
         saveA(); saveLT(); closeOv('ovLate'); render();
     }
     $('lateOk').onclick = lateSubmit;
-    $('inLateTime').onkeydown = function(e) { if (e.key === 'Enter') { e.preventDefault(); lateSubmit(); } };
     $('lateClear').onclick = function() { var dm = dayMap(lateCtx.c, true); delete dm[lateCtx.sid]; setLT(lateCtx.c, lateCtx.sid, ''); saveA(); saveLT(); closeOv('ovLate'); render(); };
     $('absJ').onclick = function() { setAbs('absent_j'); };
     $('absU').onclick = function() { setAbs('absent_u'); };
