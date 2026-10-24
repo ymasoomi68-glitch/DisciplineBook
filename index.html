@@ -567,14 +567,43 @@
         .behavior-actions .bh-btn { flex: 1; padding: 9px 6px; font-size: 13px; }
     }
 
-    /* ═══ یادآوری پشتیبان‌گیری ═══ */
-    .bk-banner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border-radius: 18px; padding: 14px 16px; margin-bottom: 14px; color: #fff; background: linear-gradient(135deg, #d97706, #f59e0b 60%, #fbbf24); box-shadow: 0 10px 22px rgba(217,119,6,.28); }
-    .bk-banner .bk-ico { font-size: 28px; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; border-radius: 16px; background: rgba(255,255,255,.22); flex-shrink: 0; }
-    .bk-banner .bk-txt { flex: 1; min-width: 150px; display: flex; flex-direction: column; gap: 3px; }
-    .bk-banner .bk-txt b { font-size: 15px; } .bk-banner .bk-txt small { font-size: 12px; opacity: .92; }
-    .bk-banner .bk-btns { display: flex; gap: 8px; flex-wrap: wrap; }
-    .bk-banner button { border: 0; border-radius: 10px; padding: 9px 14px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
-    .bk-banner .bk-go { background: #fff; color: #b45309; } .bk-banner .bk-later { background: rgba(255,255,255,.25); color: #fff; }
+    #modalUpdate .upd-notes { background: var(--bg); border-radius: 10px; padding: 10px 14px; max-height: 40vh; overflow: auto; font-size: 13px; line-height: 2; }
+    #modalUpdate .upd-notes-title { font-weight: 700; margin-bottom: 4px; }
+    #modalUpdate .upd-notes ul { margin: 0; padding: 0 18px 0 0; }
+
+    /* ═══ بنر یادآوری پشتیبان‌گیری ═══ */ /* [backup-reminder] */
+    .home-upd-notice { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 0 14px; padding: 12px 16px; border-radius: 14px; background: linear-gradient(135deg, #eef2ff, #e0e7ff); border: 1.5px solid #818cf8; color: #312e81; font-size: 14px; line-height: 1.8; }
+    .home-upd-notice .hun-btns { display: flex; gap: 8px; }
+    #backupReminderBanner {
+        position: sticky; top: 60px; z-index: 97;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff;
+        padding: 12px 16px; box-shadow: 0 4px 12px rgba(37,99,235,0.3); transition: all 0.3s;
+    }
+    #backupReminderBanner.warning { background: linear-gradient(135deg, #f59e0b, #ea580c); box-shadow: 0 4px 12px rgba(245,158,11,0.35); }
+    #backupReminderBanner.danger { background: linear-gradient(135deg, #dc2626, #b91c1c); box-shadow: 0 4px 12px rgba(220,38,38,0.4); animation: dangerPulse 2s ease-in-out infinite; }
+    @keyframes dangerPulse { 0%, 100% { box-shadow: 0 4px 12px rgba(220,38,38,0.4); } 50% { box-shadow: 0 4px 24px rgba(220,38,38,0.7); } }
+    #backupReminderBanner .br-content { display: flex; align-items: center; gap: 12px; max-width: 1200px; margin: 0 auto; }
+    #backupReminderBanner .br-icon { font-size: 28px; flex-shrink: 0; }
+    #backupReminderBanner .br-text { flex: 1; min-width: 0; }
+    #backupReminderBanner .br-title { font-weight: 800; font-size: 14px; margin-bottom: 2px; }
+    #backupReminderBanner .br-sub { font-size: 12px; opacity: 0.95; }
+    #backupReminderBanner .br-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    #backupReminderBanner .br-actions .btn { white-space: nowrap; }
+    #backupReminderBanner .btn-primary { background: #fff; color: #1d4ed8; font-weight: 700; border: none; }
+    #backupReminderBanner.warning .btn-primary { color: #ea580c; }
+    #backupReminderBanner.danger .btn-primary { color: #dc2626; }
+    #backupReminderBanner .btn-primary:hover { background: #f0f9ff; transform: translateY(-1px); }
+    #backupReminderBanner .btn-outline { background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.4); color: #fff; }
+    #backupReminderBanner .btn-outline:hover { background: rgba(255,255,255,0.25); }
+    @media (max-width: 600px) {
+        #backupReminderBanner { padding: 10px 12px; top: 56px; }
+        #backupReminderBanner .br-content { flex-wrap: wrap; gap: 8px; }
+        #backupReminderBanner .br-icon { font-size: 24px; }
+        #backupReminderBanner .br-actions { width: 100%; }
+        #backupReminderBanner .br-actions .btn { flex: 1; padding: 8px 10px; font-size: 12px; }
+    }
+    /* [backup-reminder] سایدبار هم چسبان است؛ تا بنر پشتیبان روی آن نیفتد، با ارتفاع بنر پایین می‌آید */
+    body.backup-banner-on .sidebar { top: calc(60px + var(--bk-h, 0px)); height: calc(100vh - 60px - var(--bk-h, 0px)); }
 
     /* === افزودنی‌های CSS قدم‌های بعدی اینجا === */
 
@@ -1393,6 +1422,21 @@
     </div>
 </header>
 
+<!-- [backup-reminder] بنر یادآوری پشتیبان‌گیری -->
+<div id="backupReminderBanner" style="display:none;">
+    <div class="br-content">
+        <div class="br-icon">📥</div>
+        <div class="br-text">
+            <div class="br-title" id="brTitle">وقت پشتیبان‌گیری است!</div>
+            <div class="br-sub" id="brSub">از داده‌هایت پشتیبان نگرفته‌ای.</div>
+        </div>
+        <div class="br-actions">
+            <button class="btn btn-primary btn-sm" id="btnBackupDownloadNow">📥 دانلود پشتیبان</button>
+            <button class="btn btn-outline btn-sm" id="btnBackupSnooze">⏰ بعداً</button>
+        </div>
+    </div>
+</div>
+
 <div class="layout">
 
     <!-- ═══════════════════════════════════════════════════
@@ -1435,6 +1479,10 @@
              🏠 صفحهٔ اصلی
              ═══════════════════════════════════════════════════ -->
         <div class="page active" id="page-home">
+            <div id="homeUpdateNotice" class="home-upd-notice" style="display:none;" role="alert">
+                <div id="homeUpdateText"></div>
+                <div class="hun-btns"><button class="btn btn-primary btn-sm" id="btnHomeUpdOk">تأیید</button><button class="btn btn-outline btn-sm" id="btnHomeUpdLater">بعداً</button></div>
+            </div>
             <section class="home-hero">
                 <span class="hh-blob hb1"></span><span class="hh-blob hb2"></span>
                 <div class="hh-text">
@@ -1457,11 +1505,6 @@
                 </div>
             </section>
             <button class="inbox-banner" id="btnInbox" type="button"><span class="ib-ico">📨</span><span class="ib-txt"><b>دریافت گزارش حضور و غیاب از معلم‌ها</b><small id="inboxHomeStatus"></small></span><span class="ib-go">‹</span></button>
-            <div class="bk-banner" id="bkBanner" style="display:none;">
-                <span class="bk-ico">💾</span>
-                <span class="bk-txt"><b>زمان پشتیبان‌گیری رسیده است</b><small id="bkBannerInfo"></small></span>
-                <span class="bk-btns"><button type="button" class="bk-go" id="bkGo">📥 پشتیبان‌گیری</button><button type="button" class="bk-later" id="bkLater">⏰ فردا یادآوری کن</button></span>
-            </div>
             <div class="home-grid">
                 <button class="h-tile t-classes" data-go="classes"><span class="ht-ico">📚</span><b>کلاس‌ها</b><small>ساخت و مدیریت کلاس</small></button>
                 <button class="h-tile t-students" data-go="students"><span class="ht-ico">👥</span><b>دانش‌آموزان</b><small>لیست و ویرایش دانش‌آموزان</small></button>
@@ -1796,29 +1839,43 @@
                     <input type="file" id="restoreFileInput" accept=".json" style="display:none;">
                 </div>
 
-                <!-- کارت: یادآوری پشتیبان‌گیری -->
-                <div class="settings-card">
-                    <div class="settings-card-title">🔔 یادآوری پشتیبان‌گیری</div>
+                <!-- کارت: یادآوری پشتیبان‌گیری [backup-reminder] -->
+                <div class="settings-card" id="backupReminderCard">
+                    <div class="settings-card-title">📥 یادآوری پشتیبان‌گیری</div>
                     <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.7;">
-                        در زمان تعیین‌شده، در صفحهٔ اصلی برنامه یادآوری پشتیبان‌گیری نمایش داده می‌شود.
+                        اپ هر چند وقت یک‌بار یادآوری می‌کند که از داده‌هایت پشتیبان بگیری.
+                        (این یادآوری فقط در حافظه دستگاه فعال است و اطلاعاتی به اینترنت ارسال نمی‌شود.)
                     </p>
                     <div class="settings-item">
-                        <span class="settings-item-label">فعال بودن یادآوری</span>
-                        <input type="checkbox" id="bkRemOn" style="width:22px;height:22px;accent-color:var(--primary);">
+                        <span class="settings-item-label">یادآوری</span>
+                        <label class="switch" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" id="setBackupReminderEnabled" style="width:18px;height:18px;cursor:pointer;">
+                            <span style="font-size:13px;">فعال</span>
+                        </label>
                     </div>
                     <div class="settings-item">
-                        <span class="settings-item-label">هر چند روز یک بار</span>
-                        <select class="form-select" id="bkRemDays" style="max-width:130px;"></select>
+                        <span class="settings-item-label">هر چند وقت؟</span>
+                        <select class="form-select" id="setBackupReminderFreq" style="max-width:120px;">
+                            <option value="1">هر روز</option>
+                            <option value="3" selected>هر ۳ روز</option>
+                            <option value="7">هر هفته</option>
+                        </select>
                     </div>
                     <div class="settings-item">
                         <span class="settings-item-label">ساعت یادآوری</span>
-                        <input type="time" class="form-input" id="bkRemTime" style="max-width:130px;direction:ltr;text-align:center;">
+                        <select class="form-select" id="setBackupReminderHour" style="max-width:110px;">
+                            <option value="9">۹ صبح</option>
+                            <option value="12">۱۲ ظهر</option>
+                            <option value="15">۳ بعدازظهر</option>
+                            <option value="18">۶ عصر</option>
+                            <option value="21" selected>۹ شب</option>
+                            <option value="23">۱۱ شب</option>
+                        </select>
                     </div>
-                    <div class="settings-item" style="border-bottom:none;">
-                        <span class="settings-item-label">آخرین پشتیبان</span>
-                        <span class="settings-item-value" id="bkRemLast">—</span>
+                    <div style="margin-top:12px;padding:10px 12px;background:var(--bg);border-radius:8px;font-size:12px;line-height:1.8;">
+                        📅 آخرین پشتیبان: <b id="lastBackupInfo">—</b>
                     </div>
-                    <p style="font-size:12px;color:var(--text-muted);margin-top:6px;" id="bkRemNext"></p>
+                    <button class="btn btn-success" id="btnBackupNow" style="width:100%;margin-top:12px;">📥 دانلود پشتیبان الان</button>
                 </div>
 
                 <!-- کارت ۳: آمار کلی -->
@@ -2028,6 +2085,35 @@
         <div class="modal-actions">
             <button class="btn btn-outline" data-close-modal="modalInbox">بستن</button>
             <button class="btn btn-success" id="btnInboxApply" disabled>✅ ثبت گزارش‌ها</button>
+        </div>
+    </div>
+</div>
+
+<!-- مودال هشدار پشتیبان‌گیری (صفحهٔ اول) [backup-reminder] -->
+<div class="modal-overlay" id="modalBackupWarn">
+    <div class="modal" style="max-width:420px;text-align:center;">
+        <div style="font-size:48px;">⚠️</div>
+        <h2 class="modal-title" id="bwTitle" style="border:0;"></h2>
+        <p id="bwSub" style="font-size:13px;color:var(--text-muted);line-height:1.9;margin-bottom:14px;"></p>
+        <div class="modal-actions" style="justify-content:center;">
+            <button class="btn btn-outline" id="btnBackupWarnLater">⏰ بعداً</button>
+            <button class="btn btn-primary" id="btnBackupWarnDownload">📥 دانلود پشتیبان</button>
+        </div>
+    </div>
+</div>
+
+<!-- مودال به‌روزرسانی -->
+<div class="modal-overlay" id="modalUpdate" data-noback>
+    <div class="modal" style="max-width:440px;">
+        <div style="font-size:44px;text-align:center;">🎉</div>
+        <h2 class="modal-title" style="text-align:center;border:0;">نسخهٔ جدید کلاس‌یار آماده است</h2>
+        <div id="updModalVer" style="text-align:center;font-size:13px;color:var(--text-muted);margin-bottom:12px;"></div>
+        <div id="updModalNotes" class="upd-notes"></div>
+        <div id="updModalStatus" style="display:none;font-size:13px;margin:10px 0;line-height:1.8;"></div>
+        <div style="font-size:12px;color:var(--text-muted);margin:10px 0;">اطلاعات شما هنگام بروزرسانی حفظ می‌شود.</div>
+        <div class="modal-actions">
+            <button class="btn btn-outline" id="btnUpdModalCancel">انصراف</button>
+            <button class="btn btn-primary" id="btnUpdModalInstall">⬇️ بروزرسانی</button>
         </div>
     </div>
 </div>
@@ -2468,30 +2554,9 @@ var CMAuth = (function(){
                 function(ex){ showErr(ex.message); });
         });
         var left=lockLeft(); if(left) showErr('به دلیل تلاش‌های ناموفق پیاپی، ' + left + ' ثانیهٔ دیگر دوباره تلاش کنید.');
-               if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js').then(function(reg) {
-                setInterval(function() { reg.update(); }, 60000);
-                reg.addEventListener('updatefound', function() {
-                    var newWorker = reg.installing;
-                    newWorker.addEventListener('statechange', function() {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            if (confirm('✨ نسخه جدید برنامه آماده است. برای به‌روزرسانی، تایید کنید.')) {
-                                window.location.reload();
-                            }
-                        }
-                    });
-                });
-            }).catch(function(){});
-            
-            var refreshing;
-            navigator.serviceWorker.addEventListener('controllerchange', function() {
-                if (refreshing) return;
-                refreshing = true;
-                window.location.reload();
-            });
-        }
-	}
-   
+        if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(function(){});
+    }
+
     return {validCode:validCode, signup:signup, login:login, logout:logout, changePassword:changePassword, deleteAccount:deleteAccount, resetUserData:resetUserData,
             store:store, user:curUser, initUI:initUI, toEn:toEn, _sha256:sha256, ready:ready, flush:flush, hasPersian:hasPersian};
 })();
@@ -5741,7 +5806,6 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
 
     function renderSettings() {
         var el;
-        try { renderBkRemSettings(); } catch(e0) {}
 
         el = document.getElementById('setTeacherName');
         if (el) el.value = appSettings.teacherName || '';
@@ -5815,78 +5879,6 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         } catch(e3) {}
     }
 
-    /* ═══════════════════════════════════════════════════
-       🔔 یادآوری پشتیبان‌گیری
-       ═══════════════════════════════════════════════════ */
-    var BKREM_KEY = 'cm_bkrem_v1';
-    var bkRem = { on: true, days: 7, time: '12:00', last: 0, snooze: 0, base: 0 };
-    function saveBkRem() { try { localStorage.setItem(BKREM_KEY, JSON.stringify(bkRem)); } catch(e) {} }
-    function loadBkRem() {
-        try { var raw = localStorage.getItem(BKREM_KEY); if (raw) bkRem = Object.assign(bkRem, JSON.parse(raw)); } catch(e) {}
-        if (!bkRem.base) { bkRem.base = Date.now(); saveBkRem(); }
-    }
-    // زمان یادآوری: N روز پس از آخرین پشتیبان (یا پس از شروع استفاده) در ساعت تعیین‌شده
-    function bkDueAt() {
-        var d = new Date(bkRem.last || bkRem.base);
-        d.setDate(d.getDate() + (parseInt(bkRem.days, 10) || 7));
-        var p = String(bkRem.time || '12:00').split(':');
-        d.setHours(parseInt(p[0], 10) || 0, parseInt(p[1], 10) || 0, 0, 0);
-        return d.getTime();
-    }
-    function bkIsDue() {
-        if (!bkRem.on) return false;
-        if (!appData.classes || !appData.classes.length) return false;
-        var now = Date.now();
-        return now >= bkDueAt() && now >= (bkRem.snooze || 0);
-    }
-    function bkAgo(ts) {
-        if (!ts) return 'تاکنون پشتیبان‌گیری نشده است';
-        var days = Math.floor((Date.now() - ts) / 86400000);
-        return days <= 0 ? 'امروز' : toPersianNum(days) + ' روز پیش';
-    }
-    function refreshBkBanner() {
-        var el = document.getElementById('bkBanner');
-        if (!el) return;
-        var due = bkIsDue();
-        el.style.display = due ? 'flex' : 'none';
-        if (due) {
-            var inf = document.getElementById('bkBannerInfo');
-            if (inf) inf.textContent = 'آخرین پشتیبان: ' + bkAgo(bkRem.last) + ' — برای جلوگیری از از دست رفتن اطلاعات، فایل پشتیبان بگیرید.';
-        }
-    }
-    function bkFmt(ts) { return ts ? toPersianNum(dateToJalaliStr(new Date(ts)).replace(/-/g, '/')) : '—'; }
-    function renderBkRemSettings() {
-        var on = document.getElementById('bkRemOn'), dy = document.getElementById('bkRemDays'), tm = document.getElementById('bkRemTime');
-        if (!on || !dy || !tm) return;
-        if (!dy.options.length) {
-            dy.innerHTML = [[1, 'هر روز'], [2, 'هر ۲ روز'], [3, 'هر ۳ روز'], [5, 'هر ۵ روز'], [7, 'هر هفته'], [10, 'هر ۱۰ روز'], [14, 'هر ۲ هفته'], [30, 'هر ماه']]
-                .map(function(o) { return '<option value="' + o[0] + '">' + o[1] + '</option>'; }).join('');
-        }
-        on.checked = !!bkRem.on; dy.value = String(bkRem.days); tm.value = bkRem.time || '12:00';
-        dy.disabled = tm.disabled = !bkRem.on;
-        var l = document.getElementById('bkRemLast'); if (l) l.textContent = bkRem.last ? bkAgo(bkRem.last) + ' (' + bkFmt(bkRem.last) + ')' : 'هنوز انجام نشده';
-        var n = document.getElementById('bkRemNext');
-        if (n) {
-            var due = bkDueAt(), t = new Date(due);
-            n.textContent = bkRem.on ? 'یادآوری بعدی: ' + bkFmt(due) + ' ساعت ' + toPersianNum(('0' + t.getHours()).slice(-2) + ':' + ('0' + t.getMinutes()).slice(-2)) : 'یادآوری غیرفعال است.';
-        }
-    }
-    (function() {
-        function upd() {
-            var on = document.getElementById('bkRemOn'), dy = document.getElementById('bkRemDays'), tm = document.getElementById('bkRemTime');
-            bkRem.on = !!on.checked;
-            bkRem.days = parseInt(dy.value, 10) || 7;
-            if (/^\d{2}:\d{2}$/.test(tm.value)) bkRem.time = tm.value;
-            bkRem.snooze = 0;
-            saveBkRem(); renderBkRemSettings(); refreshBkBanner();
-        }
-        ['bkRemOn', 'bkRemDays', 'bkRemTime'].forEach(function(id) { var e = document.getElementById(id); if (e) e.addEventListener('change', upd); });
-        var go = document.getElementById('bkGo'); if (go) go.addEventListener('click', function() { document.getElementById('btnFullBackup').click(); });
-        var lt = document.getElementById('bkLater'); if (lt) lt.addEventListener('click', function() { bkRem.snooze = Date.now() + 24 * 3600 * 1000; saveBkRem(); refreshBkBanner(); });
-        setInterval(function() { try { refreshBkBanner(); } catch(e) {} }, 60000);
-        document.addEventListener('visibilitychange', function() { if (!document.hidden) { try { refreshBkBanner(); } catch(e) {} } });
-    })();
-
     // ===== ذخیره تنظیمات =====
     document.getElementById('btnSaveSettings').addEventListener('click', function() {
         var e1 = document.getElementById('setTeacherName');
@@ -5947,12 +5939,233 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         document.body.removeChild(link);
         setTimeout(function() { URL.revokeObjectURL(link.href); }, 1000);
 
-        bkRem.last = Date.now(); bkRem.snooze = 0; saveBkRem(); try { refreshBkBanner(); renderBkRemSettings(); } catch(e) {}
+        markBackupDone();   // ثبت تاریخ پشتیبان برای سیستم یادآوری
 
         var self = this, orig = self.textContent;
         self.textContent = '✅ دانلود شد';
         setTimeout(function() { self.textContent = orig; }, 1500);
     });
+
+    /* ═══════════════════════════════════════════════════
+       📥 یادآوری هوشمند پشتیبان‌گیری  [backup-reminder]
+       ═══════════════════════════════════════════════════ */
+    var BACKUP_KEYS = {
+        enabled: 'cmd_backup_reminder_enabled',     // '1' یا '0'
+        freq: 'cmd_backup_reminder_freq',           // '1', '3', '7'
+        hour: 'cmd_backup_reminder_hour',           // '9', '12', ... '23'
+        lastBackupDate: 'cmd_last_backup_date',     // '1405/07/25'
+        lastBackupTs: 'cmd_last_backup_ts',         // timestamp
+        snoozeUntil: 'cmd_backup_snooze_until'      // timestamp
+    };
+
+    function getBackupSettings() {
+        var en = localStorage.getItem(BACKUP_KEYS.enabled);
+        var enabled = (en === null) ? true : (en === '1');   // پیش‌فرض: فعال
+        return {
+            enabled: enabled,
+            freq: parseInt(localStorage.getItem(BACKUP_KEYS.freq) || '3', 10),
+            hour: parseInt(localStorage.getItem(BACKUP_KEYS.hour) || '21', 10)
+        };
+    }
+
+    function saveBackupSettings(s) {
+        localStorage.setItem(BACKUP_KEYS.enabled, s.enabled ? '1' : '0');
+        localStorage.setItem(BACKUP_KEYS.freq, String(s.freq));
+        localStorage.setItem(BACKUP_KEYS.hour, String(s.hour));
+    }
+
+    // چند روز از آخرین پشتیبان گذشته؟ (۹۹۹ = هرگز)
+    function daysSinceLastBackup() {
+        var last = localStorage.getItem(BACKUP_KEYS.lastBackupDate);
+        if (!last) return 999;
+        var d = jalaliStrToDate(last);
+        if (!d) return 999;
+        d.setHours(0, 0, 0, 0);
+        var today = new Date(); today.setHours(0, 0, 0, 0);
+        return Math.max(0, Math.round((today - d) / (1000 * 60 * 60 * 24)));   // [backup-reminder] round: جلوگیری از خطای تغییر ساعت تابستانی
+    }
+
+    // ثبت انجام پشتیبان (مشترک بین همهٔ دکمه‌های دانلود پشتیبان)
+    function markBackupDone() {
+        try {
+            localStorage.setItem(BACKUP_KEYS.lastBackupDate, getTodayJalaliStr());
+            localStorage.setItem(BACKUP_KEYS.lastBackupTs, String(Date.now()));
+            localStorage.removeItem(BACKUP_KEYS.snoozeUntil);
+            hideBackupBanner();
+            updateLastBackupInfo();
+            updateBackupCardUI();
+        } catch(e) {}
+    }
+
+    // دانلود پشتیبان (مشترک با دکمهٔ تنظیمات و بنر) — بدون هیچ تأیید اضافی
+    function downloadBackupNow() {
+        var backup = {
+            version: '1.1',
+            academicYear: yearsState.current,
+            exportDate: new Date().toISOString(),
+            exportDateJalali: getTodayJalaliStr(),
+            appData: appData,
+            attendanceData: attendanceData,
+            lateTimes: lateTimes,
+            behaviorsData: behaviorsData,
+            customReasons: customReasons,
+            appSettings: appSettings
+        };
+        var dataStr = JSON.stringify(backup, null, 2);
+        var blob = new Blob(['﻿' + dataStr], { type: 'application/json;charset=utf-8' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'class_manager_backup_' + getTodayJalaliStr().replace(/\//g, '-') + '.json';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(function() { URL.revokeObjectURL(link.href); }, 1000);
+        markBackupDone();
+    }
+
+    // ارتفاع بنر را به سایدبار می‌دهیم تا زیر بنر بماند
+    function fitBackupBanner() {
+        var b = document.getElementById('backupReminderBanner');
+        var on = !!(b && b.style.display !== 'none');
+        document.body.classList.toggle('backup-banner-on', on);
+        document.documentElement.style.setProperty('--bk-h', (on ? b.offsetHeight : 0) + 'px');
+    }
+
+    function showBackupBanner() {
+        var b = document.getElementById('backupReminderBanner');
+        if (!b) return;
+        var days = daysSinceLastBackup();
+        var title = '📥 وقت پشتیبان‌گیری است!';
+        var sub = 'از داده‌هایت پشتیبان نگرفته‌ای. با یک کلیک فایل پشتیبان دانلود می‌شود.';
+        b.classList.remove('warning', 'danger');
+
+        if (days >= 999) {                       // هرگز پشتیبان نگرفته
+            b.classList.add('danger');
+            title = '🚨 هنوز پشتیبان نگرفته‌ای!';
+            sub = 'خطر از دست رفتن داده‌ها! همین حالا پشتیبان بگیر.';
+        } else if (days >= 7) {
+            b.classList.add('danger');
+            title = '🚨 ' + toPersianNum(days) + ' روز است پشتیبان نگرفته‌ای!';
+            sub = 'خطر از دست رفتن داده‌ها! همین حالا پشتیبان بگیر.';
+        } else if (days >= 4) {
+            b.classList.add('warning');
+            title = '⚠️ ' + toPersianNum(days) + ' روز است پشتیبان نگرفته‌ای';
+            sub = 'برای امنیت داده‌هایت، همین حالا پشتیبان بگیر.';
+        } else {                                 // ۱ تا ۳ روز (بسته به تکرار انتخاب‌شده)
+            title = '📥 وقت پشتیبان‌گیری است!';
+            sub = toPersianNum(days) + ' روز از آخرین پشتیبان گذشته. با یک کلیک دانلود کن.';
+        }
+        document.getElementById('brTitle').textContent = title;
+        document.getElementById('brSub').textContent = sub;
+        b.style.display = 'block';
+        fitBackupBanner();
+        // هشدار صفحهٔ اول: در صفحهٔ اصلی، یک‌بار در هر نشست، پنجرهٔ هشدار هم باز می‌شود
+        try {
+            var wm = document.getElementById('modalBackupWarn');
+            if (wm && currentPageName === 'home' && !sessionStorage.getItem('cmbk_warn')) {
+                sessionStorage.setItem('cmbk_warn', '1');
+                document.getElementById('bwTitle').textContent = title;
+                document.getElementById('bwSub').textContent = sub;
+                wm.classList.toggle('danger', b.classList.contains('danger'));
+                wm.classList.add('open');
+            }
+        } catch(e) {}
+    }
+
+    function hideBackupBanner() {
+        var b = document.getElementById('backupReminderBanner');
+        if (b) b.style.display = 'none';
+        fitBackupBanner();
+    }
+
+    function faDigits(t) { return String(t).replace(/\d/g, function(d) { return '۰۱۲۳۴۵۶۷۸۹'.charAt(d); }); }
+
+    function updateLastBackupInfo() {
+        var el = document.getElementById('lastBackupInfo');
+        if (!el) return;
+        var date = localStorage.getItem(BACKUP_KEYS.lastBackupDate);
+        var ts = localStorage.getItem(BACKUP_KEYS.lastBackupTs);
+        if (!date) {
+            el.textContent = 'هنوز پشتیبانی نگرفته‌ای';
+            el.style.color = '#f59e0b';
+            return;
+        }
+        var timeStr = '';
+        if (ts) {
+            try {
+                var d = new Date(parseInt(ts, 10));
+                timeStr = ' - ' + faDigits(pad2(d.getHours()) + ':' + pad2(d.getMinutes()));   // [backup-reminder] pad قبل از تبدیل به ارقام فارسی
+            } catch(e) {}
+        }
+        el.textContent = faDigits(date) + timeStr;
+        el.style.color = '';
+    }
+
+    function updateBackupCardUI() {
+        var s = getBackupSettings();
+        var en = document.getElementById('setBackupReminderEnabled');
+        var freq = document.getElementById('setBackupReminderFreq');
+        var hour = document.getElementById('setBackupReminderHour');
+        if (en) en.checked = s.enabled;
+        if (freq) { freq.value = String(s.freq); freq.disabled = !s.enabled; }
+        if (hour) { hour.value = String(s.hour); hour.disabled = !s.enabled; }
+        updateLastBackupInfo();
+    }
+
+    function checkBackupReminder() {
+        var s = getBackupSettings();
+        if (!s.enabled) { hideBackupBanner(); return; }
+        if (daysSinceLastBackup() < s.freq) { hideBackupBanner(); return; }
+        if (new Date().getHours() < s.hour) { hideBackupBanner(); return; }
+        var snooze = parseInt(localStorage.getItem(BACKUP_KEYS.snoozeUntil) || '0', 10);
+        if (Date.now() < snooze) { hideBackupBanner(); return; }
+        showBackupBanner();
+    }
+
+    function initBackupReminder() {
+        if (localStorage.getItem(BACKUP_KEYS.enabled) === null) {
+            localStorage.setItem(BACKUP_KEYS.enabled, '1');
+            localStorage.setItem(BACKUP_KEYS.freq, '3');
+            localStorage.setItem(BACKUP_KEYS.hour, '21');
+        }
+        updateBackupCardUI();
+
+        var btnDl = document.getElementById('btnBackupDownloadNow');
+        if (btnDl) btnDl.addEventListener('click', downloadBackupNow);
+        var btnSnooze = document.getElementById('btnBackupSnooze');
+        if (btnSnooze) btnSnooze.addEventListener('click', function() {
+            localStorage.setItem(BACKUP_KEYS.snoozeUntil, String(Date.now() + 2 * 3600 * 1000));   // ۲ ساعت بعد
+            hideBackupBanner();
+        });
+        var btnNow = document.getElementById('btnBackupNow');
+        if (btnNow) btnNow.addEventListener('click', downloadBackupNow);
+        var bwDl = document.getElementById('btnBackupWarnDownload');
+        if (bwDl) bwDl.addEventListener('click', function() { closeModal('modalBackupWarn'); downloadBackupNow(); });
+        var bwLater = document.getElementById('btnBackupWarnLater');
+        if (bwLater) bwLater.addEventListener('click', function() {
+            localStorage.setItem(BACKUP_KEYS.snoozeUntil, String(Date.now() + 2 * 3600 * 1000));
+            hideBackupBanner(); closeModal('modalBackupWarn');
+        });
+
+        var en = document.getElementById('setBackupReminderEnabled');
+        if (en) en.addEventListener('change', function() {
+            var s = getBackupSettings(); s.enabled = this.checked; saveBackupSettings(s);
+            updateBackupCardUI();
+            if (!s.enabled) hideBackupBanner(); else checkBackupReminder();
+        });
+        var freq = document.getElementById('setBackupReminderFreq');
+        if (freq) freq.addEventListener('change', function() {
+            var s = getBackupSettings(); s.freq = parseInt(this.value, 10); saveBackupSettings(s); checkBackupReminder();
+        });
+        var hour = document.getElementById('setBackupReminderHour');
+        if (hour) hour.addEventListener('change', function() {
+            var s = getBackupSettings(); s.hour = parseInt(this.value, 10); saveBackupSettings(s); checkBackupReminder();
+        });
+
+        window.addEventListener('resize', fitBackupBanner);
+        setTimeout(checkBackupReminder, 3000);
+        setInterval(checkBackupReminder, 5 * 60 * 1000);
+    }
 
     // ===== بازیابی از پشتیبان =====
     document.getElementById('btnRestoreBackup').addEventListener('click', function() {
@@ -6147,7 +6360,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     /* ═══════════════════════════════════════════════════
        🔄 به‌روزرسانی از GitHub
        ═══════════════════════════════════════════════════ */
-    var APP_VERSION = '1.2.11';
+    var APP_VERSION = '1.2.12';
     var realLS = window.localStorage, UPD_KEY = 'cmupd_v1';
     var pendingUpdate = null;
 
@@ -6159,15 +6372,91 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         return 0;
     }
     function updMsg(html, kind) {
-        var el = document.getElementById('updStatus'); if (!el) return;
-        el.innerHTML = html;
-        el.style.color = kind === 'bad' ? '#dc2626' : kind === 'ok' ? '#059669' : 'var(--text-muted)';
+        var el = document.getElementById('updStatus');
+        var col = kind === 'bad' ? '#dc2626' : kind === 'ok' ? '#059669' : 'var(--text-muted)';
+        if (el) { el.innerHTML = html; el.style.color = col; }
+        var ms = document.getElementById('updModalStatus');
+        if (ms) { ms.innerHTML = html; ms.style.color = col; ms.style.display = html ? '' : 'none'; }
+    }
+    // پنجرهٔ اطلاع‌رسانی نسخهٔ جدید: توضیح تغییرات + «بروزرسانی» / «انصراف»
+    function showUpdateModal(auto) {
+        var pu = pendingUpdate, m = document.getElementById('modalUpdate');
+        if (!pu || !m) return;
+        if (auto) {   // بعد از «انصراف»، همان نسخه تا ۱۲ ساعت دوباره خودکار پرسیده نمی‌شود
+            try {
+                var sn = String(realLS.getItem('cmupd_snooze') || '').split('|');
+                if (sn[0] === pu.version && Date.now() - Number(sn[1] || 0) < 12 * 3600 * 1000) return;
+            } catch(e) {}
+        }
+        var fa = function(t) { return String(t).replace(/\d/g, function(d) { return '۰۱۲۳۴۵۶۷۸۹'.charAt(d); }); };
+        document.getElementById('updModalVer').innerHTML = 'نسخهٔ <b>' + escapeHtml(fa(pu.version)) + '</b> &nbsp;(نسخهٔ فعلی شما: ' + escapeHtml(fa(APP_VERSION)) + ')';
+        var notes = pu.notes || [];
+        document.getElementById('updModalNotes').innerHTML = notes.length
+            ? '<div class="upd-notes-title">تغییرات این نسخه:</div><ul>' + notes.map(function(n) { return '<li>' + escapeHtml(String(n)) + '</li>'; }).join('') + '</ul>'
+            : '<div class="upd-notes-title">این نسخه شامل بهبودها و رفع اشکال‌هاست.</div>';
+        var ms = document.getElementById('updModalStatus'); if (ms) { ms.innerHTML = ''; ms.style.display = 'none'; }
+        var bi = document.getElementById('btnUpdModalInstall'), bc = document.getElementById('btnUpdModalCancel');
+        if (bi) bi.disabled = false; if (bc) bc.disabled = false;
+        m.classList.add('open');
+    }
+    // [update-confirm] اعلان نسخهٔ جدید در صفحهٔ اول؛ «تأیید» نسخهٔ جدید را فعال می‌کند و صفحه دوباره بارگذاری می‌شود
+    function showUpdateNotice() {
+        var hn = document.getElementById('homeUpdateNotice');
+        if (!hn) return;
+        var pu = pendingUpdate, ver = (pu && pu.version) || '';
+        try {   // اگر قبلاً «بعداً» زده و کمتر از ۱۲ ساعت گذشته
+            var sn = String(realLS.getItem('cmupd_snooze') || '').split('|');
+            if (sn[0] === ver && Date.now() - Number(sn[1] || 0) < 12 * 3600 * 1000) return;
+        } catch(e) {}
+        var fa = function(t) { return String(t).replace(/\d/g, function(d) { return '۰۱۲۳۴۵۶۷۸۹'.charAt(d); }); };
+        var txt = document.getElementById('homeUpdateText');
+        if (txt) txt.innerHTML = '🎉 ' + (ver ? 'نسخهٔ جدید <b>' + escapeHtml(fa(ver)) + '</b>' : 'نسخهٔ جدید برنامه') + ' آماده است. برای دریافت تغییرات، تأیید را بزنید.';
+        hn.style.display = 'flex';
+    }
+    // [update-confirm] فعال‌سازی Service Worker جدید (جایگزین installUpdate قبلی)
+    function activateWaitingSW(w) {
+        var go = function() {
+            try { w.postMessage({ type: 'SKIP_WAITING' }); } catch(e) {}
+            // [fix-confirm] اگر controllerchange نیامد (مثلاً صفحه بدون کنترل‌کننده باز شده بود)، بعد از ۱.۵ ثانیه حتماً reload شود
+            setTimeout(function() { if (window.__swReloading) return; window.__swReloading = true; location.reload(); }, 1500);
+        };
+        // پیش از بارگذاری مجدد، داده‌ها کاملاً ذخیره شوند
+        try { var f = CMAuth.flush && CMAuth.flush(); if (f && f.then) { f.then(go, go); return; } } catch(e) {}
+        go();
+    }
+    function confirmUpdate() {
+        var hn = document.getElementById('homeUpdateNotice'); if (hn) hn.style.display = 'none';   // [fix-confirm] بنر بلافاصله پنهان شود
+        closeModal('modalUpdate');
+        var w = window.__pendingSWWorker;
+        if (w) { updMsg('⏳ در حال نصب نسخهٔ جدید...'); activateWaitingSW(w); return; }
+        // نسخهٔ جدید هنوز توسط مرورگر دریافت نشده: دریافتش را شروع کن و به‌محض آماده شدن فعال کن
+        window.__swApplyWhenReady = true;
+        updMsg('⏳ در حال دریافت نسخهٔ جدید... (چند لحظه صبر کنید)');
+        if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
+            navigator.serviceWorker.getRegistration().then(function(r) {
+                if (!r) { updMsg('❌ نصب نسخهٔ جدید ممکن نیست؛ برنامه را ببندید و دوباره باز کنید.', 'bad'); return; }
+                if (r.waiting) { window.__pendingSWWorker = r.waiting; activateWaitingSW(r.waiting); return; }
+                // [fix-confirm] بعد از دریافت، بدون وابستگی به وجود کنترل‌کننده، به‌محض installed شدن فعال شود
+                r.update().then(function() {
+                    var nw = r.waiting || r.installing;
+                    if (!nw) {   // نسخهٔ جدید از قبل فعال شده (مثلاً صفحه بدون کنترل‌کننده بوده): فقط صفحه دوباره بارگذاری شود
+                        if (window.__swApplyWhenReady && r.active && !window.__swReloading) { window.__swApplyWhenReady = false; window.__swReloading = true; updMsg('⏳ در حال بارگذاری مجدد...'); setTimeout(function() { location.reload(); }, 1500); }
+                        return;
+                    }
+                    var fire = function() { if (nw.state === 'installed' && window.__swApplyWhenReady) { window.__swApplyWhenReady = false; window.__pendingSWWorker = nw; activateWaitingSW(nw); } };
+                    nw.addEventListener('statechange', fire); fire();
+                }).catch(function() {});
+                setTimeout(function() {
+                    if (window.__swApplyWhenReady && !window.__pendingSWWorker) { window.__swApplyWhenReady = false; updMsg('❌ نسخهٔ جدید هنوز آماده نیست. چند دقیقه بعد دوباره امتحان کنید.', 'bad'); }
+                }, 20000);
+            }).catch(function() {});
+        }
     }
     function readUpdInputs() { return updCfg(); }
     function rawUrl(cfg, path) {
         return 'https://raw.githubusercontent.com/' + cfg.repo + '/' + encodeURI(cfg.branch) + '/' + path;
     }
-    function checkUpdate() {
+    function checkUpdate(auto) {
         var btnI = document.getElementById('btnUpdInstall'); btnI.style.display = 'none'; pendingUpdate = null;
         var cfg;
         try { cfg = readUpdInputs(); } catch(e) { updMsg('❌ ' + e.message, 'bad'); return; }
@@ -6184,75 +6473,54 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
             });
             if (files.indexOf('index.html') < 0) throw new Error('فهرست فایل‌های نسخه ناقص است.');
             if (verCmp(j.version, APP_VERSION) <= 0) { updMsg('✅ نسخهٔ شما (' + escapeHtml(APP_VERSION) + ') به‌روز است.', 'ok'); return; }
-            pendingUpdate = { cfg: cfg, version: String(j.version), files: files };
+            pendingUpdate = { cfg: cfg, version: String(j.version), files: files, sha: (j.sha256 && typeof j.sha256 === 'object') ? j.sha256 : null };
             var notes = Array.isArray(j.notes) ? j.notes : (j.notes ? [String(j.notes)] : []);
+            pendingUpdate.notes = notes;
             updMsg('🎉 نسخهٔ جدید <b>' + escapeHtml(j.version) + '</b> آماده است (نسخهٔ شما: ' + escapeHtml(APP_VERSION) + ').' +
                 (notes.length ? '<ul style="margin:6px 18px 0;padding:0;line-height:1.9;">' + notes.map(function(n) { return '<li>' + escapeHtml(String(n)) + '</li>'; }).join('') + '</ul>' : ''), 'ok');
             btnI.style.display = '';
+            // [update-confirm] مرورگر هم برای دریافت sw.js جدید بررسی کند (نسخه در حالت waiting می‌ماند)
+            try { if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) navigator.serviceWorker.getRegistration().then(function(r) { if (r) r.update().catch(function() {}); }); } catch(e) {}
+            if (auto) showUpdateNotice(); else showUpdateModal(false);
         }).catch(function(e) {
+            if (auto) return;   // بررسی خودکار: خطا را به کاربر نشان نده
             updMsg('❌ ' + (e && e.message ? (e.name === 'TypeError' ? 'اتصال به اینترنت برقرار نشد.' : e.message) : 'خطا'), 'bad');
-        });
-    }
-    function mimeOf(p) {
-        if (/\.html?$/i.test(p)) return 'text/html; charset=utf-8';
-        if (/\.js$/i.test(p)) return 'text/javascript; charset=utf-8';
-        if (/\.json$/i.test(p)) return 'application/json; charset=utf-8';
-        if (/\.png$/i.test(p)) return 'image/png';
-        if (/\.jpe?g$/i.test(p)) return 'image/jpeg';
-        if (/\.svg$/i.test(p)) return 'image/svg+xml';
-        if (/\.css$/i.test(p)) return 'text/css; charset=utf-8';
-        if (/\.xlsx$/i.test(p)) return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-        return 'application/octet-stream';
-    }
-    function installUpdate() {
-        if (!pendingUpdate) return;
-        if (!('caches' in window)) { updMsg('❌ این مرورگر ذخیره‌سازی آفلاین ندارد؛ به‌روزرسانی خودکار ممکن نیست.', 'bad'); return; }
-        if (!confirm('نسخهٔ ' + pendingUpdate.version + ' دریافت و نصب شود؟ اطلاعات شما حفظ می‌شود.')) return;
-        var pu = pendingUpdate, btn = document.getElementById('btnUpdInstall'), got = [];
-        btn.disabled = true;
-        var chain = Promise.resolve();
-        pu.files.forEach(function(f, i) {
-            chain = chain.then(function() {
-                updMsg('⏳ دریافت فایل‌ها (' + toPersianNum(i + 1) + ' از ' + toPersianNum(pu.files.length) + ')...');
-                return fetch(rawUrl(pu.cfg, f) + '?t=' + Date.now(), { cache: 'no-store' }).then(function(r) {
-                    if (!r.ok) throw new Error('دریافت «' + f + '» ناموفق بود (' + r.status + ').');
-                    return r.arrayBuffer();
-                }).then(function(buf) { got.push({ path: f, buf: buf }); });
-            });
-        });
-        chain.then(function() {
-            var idx = got.filter(function(g) { return g.path === 'index.html'; })[0];
-            var html = new TextDecoder('utf-8').decode(idx.buf);
-            if (idx.buf.byteLength < 50000 || html.indexOf('name="cm-app"') < 0 || html.indexOf('<!DOCTYPE') !== 0) throw new Error('فایل index.html دریافت‌شده معتبر نیست؛ به‌روزرسانی لغو شد و برنامهٔ فعلی دست‌نخورده ماند.');
-            var sw = got.filter(function(g) { return g.path === 'sw.js'; })[0];
-            if (sw && new TextDecoder('utf-8').decode(sw.buf).indexOf('CACHE_NAME') < 0) throw new Error('فایل sw.js دریافت‌شده معتبر نیست.');
-            return caches.keys().then(function(names) {
-                var mine = names.filter(function(n) { return n.indexOf('discipline-book-') === 0; }).sort();
-                return caches.open(mine.length ? mine[mine.length - 1] : 'discipline-book-update');
-            });
-        }).then(function(cache) {
-            var base = new URL('./', location.href).href, ops = [];
-            got.forEach(function(g) {
-                var mk = function() { return new Response(g.buf.slice(0), { status: 200, headers: { 'Content-Type': mimeOf(g.path) } }); };
-                ops.push(cache.put(base + g.path, mk()));
-                if (g.path === 'index.html') ops.push(cache.put(base, mk()));
-            });
-            return Promise.all(ops);
-        }).then(function() {
-            updMsg('✅ نسخهٔ ' + escapeHtml(pu.version) + ' نصب شد. در حال بازشدن مجدد...', 'ok');
-            var p = (navigator.serviceWorker && navigator.serviceWorker.getRegistration) ? navigator.serviceWorker.getRegistration().then(function(r) { return r && r.update(); }).catch(function() {}) : Promise.resolve();
-            return p.then(function() { setTimeout(function() { location.reload(); }, 900); });
-        }).catch(function(e) {
-            btn.disabled = false;
-            updMsg('❌ ' + (e && e.message ? e.message : 'خطا در به‌روزرسانی'), 'bad');
         });
     }
     (function() {
         var fa = function(t) { return String(t).replace(/\d/g, function(d) { return '۰۱۲۳۴۵۶۷۸۹'.charAt(d); }); };
         var vl = document.getElementById('updCurrent'); if (vl) vl.textContent = fa(APP_VERSION);
         var fl = document.getElementById('appVersionLabel'); if (fl) fl.textContent = fa(APP_VERSION);
-        var bc = document.getElementById('btnUpdCheck'); if (bc) bc.addEventListener('click', checkUpdate);
-        var bi = document.getElementById('btnUpdInstall'); if (bi) bi.addEventListener('click', installUpdate);
+        var bc = document.getElementById('btnUpdCheck'); if (bc) bc.addEventListener('click', function() { checkUpdate(false); });
+        var bi = document.getElementById('btnUpdInstall'); if (bi) bi.addEventListener('click', function() { confirmUpdate(); });  // [update-confirm]
+        var hok = document.getElementById('btnHomeUpdOk'), hlt = document.getElementById('btnHomeUpdLater'), hn = document.getElementById('homeUpdateNotice');
+        // [update-confirm] «تأیید» → فعال‌سازی نسخهٔ جدید؛ «بعداً» → پنهان‌شدن اعلان تا ۱۲ ساعت
+        // [confirm-then-modal] «تأیید» فقط اعلان را می‌بندد و پنجرهٔ «نسخهٔ جدید» (با فهرست تغییرات) را باز می‌کند؛ نصب با دکمهٔ «بروزرسانی» همان پنجره انجام می‌شود
+        if (hok) hok.addEventListener('click', function() {
+            if (hn) hn.style.display = 'none';
+            if (pendingUpdate) showUpdateModal(false);
+            else checkUpdate(false);   // اطلاعات نسخه هنوز نیامده (فقط SW جدید پیدا شده): از version.json خوانده و پنجره باز می‌شود
+        });
+        if (hlt) hlt.addEventListener('click', function() {
+            try { realLS.setItem('cmupd_snooze', ((pendingUpdate && pendingUpdate.version) || '') + '|' + Date.now()); } catch(e) {}
+            if (hn) hn.style.display = 'none';
+        });
+        var mi = document.getElementById('btnUpdModalInstall'); if (mi) mi.addEventListener('click', function() { confirmUpdate(); });  // [update-confirm]
+        var mc = document.getElementById('btnUpdModalCancel');
+        if (mc) mc.addEventListener('click', function() {
+            try { if (pendingUpdate) realLS.setItem('cmupd_snooze', pendingUpdate.version + '|' + Date.now()); } catch(e) {}
+            closeModal('modalUpdate');
+        });
+        // بررسی خودکار نسخهٔ جدید (حداکثر هر ۶ ساعت)؛ اگر نسخهٔ جدیدی بود، پنجرهٔ اطلاع‌رسانی باز می‌شود
+        setTimeout(function() {
+            try {
+                if (!navigator.onLine) return;
+                var last = Number(realLS.getItem('cmupd_last') || 0);
+                if (Date.now() - last < 6 * 3600 * 1000) return;
+                realLS.setItem('cmupd_last', String(Date.now()));
+                checkUpdate(true);
+            } catch(e) {}
+        }, 6000);
     })();
 
     /* ═══════════════════════════════════════════════════
@@ -6268,7 +6536,6 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         e = document.getElementById('homeStudents'); if (e) e.textContent = toPersianNum(st);
         e = document.getElementById('homeYear'); if (e) e.textContent = yearLabel(yearsState.current);
         try { updateInboxStatus(); } catch(x) {}
-        try { refreshBkBanner(); } catch(x) {}
     }
     document.querySelectorAll('[data-go]').forEach(function(b) {
         b.addEventListener('click', function() { showPage(b.getAttribute('data-go')); });
@@ -6308,8 +6575,9 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         var st = e.state || {};
         var open = openOverlays();
         if (modalPushed > 0 && open.length) {
-            modalPushed--;
             var top = open[open.length - 1];
+            if (top.getAttribute('data-noback') !== null) { try { history.pushState({ cmModal: 1 }, ''); } catch(x) {} return; }   // پنجرهٔ به‌روزرسانی با «برگشت» بسته نمی‌شود
+            modalPushed--;
             if (top.id) top.classList.remove('open'); else top.remove();
             return;
         }
@@ -6370,17 +6638,44 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     if (deferredPrompt) { var pwaCard0 = document.getElementById('pwaCard'); if (pwaCard0) pwaCard0.style.display = 'block'; }
 
     // ===== ثبت Service Worker =====
+    // [update-confirm] نسخهٔ جدید SW در حالت waiting می‌ماند؛ اعلان در صفحهٔ اول نشان داده می‌شود و فقط با «تأیید» فعال می‌شود
     if ('serviceWorker' in navigator) {
-        var cmRegSW = function() {
+        var swHadController = !!navigator.serviceWorker.controller;   // در نصب اول false است
+        var swTrack = function(worker) {
+            if (!worker) return;
+            var check = function() {
+                if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                    window.__pendingSWWorker = worker;
+                    if (window.__swApplyWhenReady) { activateWaitingSW(worker); } else showUpdateNotice();
+                }
+            };
+            worker.addEventListener('statechange', check);
+            check();
+        };
+        // (اسکریپت اصلی ممکن است بعد از رویداد load اجرا شود؛ پس اگر load گذشته بود، بلافاصله ثبت می‌کنیم)
+        var swRegister = function() {
             navigator.serviceWorker.register('./sw.js')
                 .then(function(reg) {
                     console.log('✅ Service Worker ثبت شد:', reg.scope);
+                    // نسخهٔ جدید از قبل در waiting است (مثلاً بعد از بستن و بازکردن برنامه)
+                    if (reg.waiting && navigator.serviceWorker.controller) {
+                        window.__pendingSWWorker = reg.waiting;
+                        showUpdateNotice();
+                    }
+                    swTrack(reg.installing);
+                    reg.addEventListener('updatefound', function() { swTrack(reg.installing); });
                 })
                 .catch(function(err) {
                     console.log('❌ خطا در ثبت Service Worker:', err);
                 });
         };
-        if (document.readyState === 'complete') cmRegSW(); else window.addEventListener('load', cmRegSW);
+        if (document.readyState === 'complete') swRegister(); else window.addEventListener('load', swRegister);
+        // وقتی SW جدید فعال شد، یک بار صفحه دوباره بارگذاری شود (نه در نصب اول)
+        navigator.serviceWorker.addEventListener('controllerchange', function() {
+            if (!swHadController || window.__swReloading) return;
+            window.__swReloading = true;
+            location.reload();
+        });
     }
 
     // ===== رویداد beforeinstallprompt =====
@@ -6459,8 +6754,8 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     loadCustomReasons();
     loadBehaviors();
     loadSettings();
-    loadBkRem();
     applyFontSize(appSettings.fontSize);
+    initBackupReminder();   // [backup-reminder]
 
     try {
         var savedTheme = localStorage.getItem('cm_theme');
