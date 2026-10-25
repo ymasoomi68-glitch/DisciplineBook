@@ -6349,7 +6349,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     /* ═══════════════════════════════════════════════════
        🔄 به‌روزرسانی از GitHub
        ═══════════════════════════════════════════════════ */
-    var APP_VERSION = '1.2.15';
+    var APP_VERSION = '1.2.16';
     var realLS = localStorage, UPD_KEY = 'cmupd_v1';   // ذخیره‌گاه حساب کاربر (نه localStorage خام)
     var pendingUpdate = null;
 
@@ -6534,7 +6534,26 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
             } catch(e) {}
         }, 6000);
     })();
-
+	    // ===== اطلاع‌رسانی آپدیت خودکار (What's New) =====
+    function checkSilentUpdate() {
+        try {
+            var lastV = realLS.getItem('cm_last_version');
+            if (lastV && lastV !== APP_VERSION) {
+                // نسخه جدیدتر از نسخه‌ای است که کاربر قبلاً دیده
+                if (verCmp(APP_VERSION, lastV) > 0) {
+                    setTimeout(function() {
+                        if (confirm('✨ برنامه با موفقیت به نسخه ' + APP_VERSION + ' آپدیت شد!\n\nآیا می‌خواهید تغییرات را ببینید؟')) {
+                            // اگر دکمه آپدیت در تنظیمات وجود داشت، به آنجا برود
+                            if (typeof showPage === 'function') showPage('settings');
+                        }
+                    }, 1000);
+                }
+            }
+            // ذخیره نسخه فعلی برای دفعه بعد
+            realLS.setItem('cm_last_version', APP_VERSION);
+        } catch(e) {}
+    }
+	
     /* ═══════════════════════════════════════════════════
        🏠 صفحهٔ اصلی و دکمهٔ برگشت
        ═══════════════════════════════════════════════════ */
@@ -6775,6 +6794,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
        ═══════════════════════════════════════════════════ */
 
     loadData();
+	checkSilentUpdate();
     renderClasses();
 
     loadAttendance();
