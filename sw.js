@@ -28,9 +28,15 @@ self.addEventListener('install', function(event) {
     event.waitUntil(
         caches.open(CACHE_NAME).then(function(cache) {
             // cache:'reload' → فایل‌ها حتماً از شبکه (نه از کش HTTP مرورگر) گرفته شوند تا نسخهٔ کهنه ذخیره نشود
-            return cache.addAll(CACHE_FILES.map(function(u) { return new Request(u, { cache: 'reload' }); }));
-        }).catch(function(err) {
-            console.log('خطا در کش کردن:', err);
+            // هر فایل جداگانه: نبودِ یک آیکون کل کش را خراب نمی‌کند؛ ولی اگر صفحه‌های اصلی دریافت نشوند، نصب ناموفق می‌شود
+            // (تا نسخهٔ ناقص نصب نشود و بعداً دوباره تلاش شود)
+            var CORE = { './index.html': 1, './teacher.html': 1 };
+            return Promise.all(CACHE_FILES.map(function(u) {
+                return cache.add(new Request(u, { cache: 'reload' })).catch(function(err) {
+                    console.log('کش نشد:', u, err);
+                    if (CORE[u]) throw err;
+                });
+            }));
         })
     );
     // [update-confirm] self.skipWaiting() عمداً حذف شده است

@@ -603,7 +603,7 @@
         #backupReminderBanner .br-actions .btn { flex: 1; padding: 8px 10px; font-size: 12px; }
     }
     /* [backup-reminder] سایدبار هم چسبان است؛ تا بنر پشتیبان روی آن نیفتد، با ارتفاع بنر پایین می‌آید */
-    body.backup-banner-on .sidebar { top: calc(60px + var(--bk-h, 0px)); height: calc(100vh - 60px - var(--bk-h, 0px)); }
+    body.backup-banner-on .sidebar { top: calc(var(--tb-h, 60px) + var(--bk-h, 0px)); height: calc(100vh - var(--tb-h, 60px) - var(--bk-h, 0px)); }
 
     /* === افزودنی‌های CSS قدم‌های بعدی اینجا === */
 
@@ -1832,7 +1832,7 @@
                 <div class="settings-card">
                     <div class="settings-card-title">💾 پشتیبان‌گیری</div>
                     <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.7;">
-                        همهٔ داده‌ها (کلاس‌ها، حضور و غیاب، رفتار) را در یک فایل ذخیره کنید.
+                        همهٔ داده‌های سال تحصیلی انتخاب‌شده (کلاس‌ها، حضور و غیاب، رفتار) را در یک فایل ذخیره کنید. برای هر سال تحصیلی جداگانه پشتیبان بگیرید.
                     </p>
                     <button class="btn btn-success" id="btnFullBackup" style="width:100%;margin-bottom:8px;">📥 دانلود فایل پشتیبان کامل</button>
                     <button class="btn btn-outline" id="btnRestoreBackup" style="width:100%;">📤 بازیابی از فایل پشتیبان</button>
@@ -1843,7 +1843,7 @@
                 <div class="settings-card" id="backupReminderCard">
                     <div class="settings-card-title">📥 یادآوری پشتیبان‌گیری</div>
                     <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.7;">
-                        اپ هر چند وقت یک‌بار یادآوری می‌کند که از داده‌هایت پشتیبان بگیری.
+                        اپ هر چند وقت یک‌بار یادآوری می‌کند که از داده‌هایت پشتیبان بگیری. پشتیبان فقط شامل سال تحصیلی انتخاب‌شده (بالای صفحه) است؛ برای هر سال تحصیلی جداگانه پشتیبان بگیر و یادآوری هم برای هر سال جدا حساب می‌شود.
                         (این یادآوری فقط در حافظه دستگاه فعال است و اطلاعاتی به اینترنت ارسال نمی‌شود.)
                     </p>
                     <div class="settings-item">
@@ -3450,7 +3450,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         document.body.appendChild(ov);
         var iframe = ov.querySelector('#pvFrame'), wrap = ov.querySelector('#pvWrap'), btnP = ov.querySelector('#pvPrint'), body = ov.querySelector('.pv-body');
         function close() { document.removeEventListener('keydown', onKey); if (ov.parentNode) ov.parentNode.removeChild(ov); }
-        function onKey(e) { if (e.key === 'Escape') close(); }
+        function onKey(e) { if (!ov.parentNode) { document.removeEventListener('keydown', onKey); return; } if (e.key === 'Escape') close(); }
         document.addEventListener('keydown', onKey);
         ov.querySelector('#pvClose').addEventListener('click', close);
         var doc = iframe.contentWindow.document;
@@ -5908,6 +5908,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         if (window.innerWidth < 600 && z > 1) z = z >= 1.3 ? 1.2 : 1.1; // روی موبایل کمتر بزرگ شود تا صفحه جا بماند
         document.documentElement.style.fontSize = '';
         document.body.style.zoom = z === 1 ? '' : String(z);
+        try { fitBackupBanner(); } catch(e) {}
     }
 
     // ===== حالت شب (از تنظیمات) =====
@@ -5917,29 +5918,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
 
     // ===== پشتیبان‌گیری کامل =====
     document.getElementById('btnFullBackup').addEventListener('click', function() {
-        var backup = {
-            version: '1.1',
-            academicYear: yearsState.current,
-            exportDate: new Date().toISOString(),
-            appData: appData,
-            attendanceData: attendanceData,
-            lateTimes: lateTimes,
-            behaviorsData: behaviorsData,
-            customReasons: customReasons,
-            appSettings: appSettings
-        };
-
-        var dataStr = JSON.stringify(backup, null, 2);
-        var blob = new Blob(['\ufeff' + dataStr], { type: 'application/json;charset=utf-8' });
-        var link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'class_manager_full_backup_' + new Date().toISOString().slice(0, 10) + '.json';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(function() { URL.revokeObjectURL(link.href); }, 1000);
-
-        markBackupDone();   // ثبت تاریخ پشتیبان برای سیستم یادآوری
+        downloadBackupNow();   // یک تابع مشترک برای دکمهٔ تنظیمات و یادآوری (ثبت تاریخ پشتیبان هم در همان است)
 
         var self = this, orig = self.textContent;
         self.textContent = '✅ دانلود شد';
@@ -5953,10 +5932,13 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         enabled: 'cmd_backup_reminder_enabled',     // '1' یا '0'
         freq: 'cmd_backup_reminder_freq',           // '1', '3', '7'
         hour: 'cmd_backup_reminder_hour',           // '9', '12', ... '23'
-        lastBackupDate: 'cmd_last_backup_date',     // '1405/07/25'
-        lastBackupTs: 'cmd_last_backup_ts',         // timestamp
+        lastBackupDate: 'cmd_last_backup_date',     // '1405/07/25'  (به‌ازای هر سال تحصیلی؛ پسوند سال اضافه می‌شود)
+        lastBackupTs: 'cmd_last_backup_ts',         // timestamp     (به‌ازای هر سال تحصیلی)
         snoozeUntil: 'cmd_backup_snooze_until'      // timestamp
     };
+
+    // پشتیبان فقط داده‌های سال تحصیلی فعال را دارد؛ پس تاریخ آخرین پشتیبان هم برای هر سال جداگانه نگه‌داری می‌شود
+    function bkYearKey(k) { return k + '_' + yearsState.current; }
 
     function getBackupSettings() {
         var en = localStorage.getItem(BACKUP_KEYS.enabled);
@@ -5976,7 +5958,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
 
     // چند روز از آخرین پشتیبان گذشته؟ (۹۹۹ = هرگز)
     function daysSinceLastBackup() {
-        var last = localStorage.getItem(BACKUP_KEYS.lastBackupDate);
+        var last = localStorage.getItem(bkYearKey(BACKUP_KEYS.lastBackupDate));
         if (!last) return 999;
         var d = jalaliStrToDate(last);
         if (!d) return 999;
@@ -5988,8 +5970,8 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     // ثبت انجام پشتیبان (مشترک بین همهٔ دکمه‌های دانلود پشتیبان)
     function markBackupDone() {
         try {
-            localStorage.setItem(BACKUP_KEYS.lastBackupDate, getTodayJalaliStr());
-            localStorage.setItem(BACKUP_KEYS.lastBackupTs, String(Date.now()));
+            localStorage.setItem(bkYearKey(BACKUP_KEYS.lastBackupDate), getTodayJalaliStr());
+            localStorage.setItem(bkYearKey(BACKUP_KEYS.lastBackupTs), String(Date.now()));
             localStorage.removeItem(BACKUP_KEYS.snoozeUntil);
             hideBackupBanner();
             updateLastBackupInfo();
@@ -6012,10 +5994,10 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
             appSettings: appSettings
         };
         var dataStr = JSON.stringify(backup, null, 2);
-        var blob = new Blob(['﻿' + dataStr], { type: 'application/json;charset=utf-8' });
+        var blob = new Blob(['\ufeff' + dataStr], { type: 'application/json;charset=utf-8' });
         var link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = 'class_manager_backup_' + getTodayJalaliStr().replace(/\//g, '-') + '.json';
+        link.download = 'class_manager_full_backup_' + new Date().toISOString().slice(0, 10) + '.json';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -6027,6 +6009,11 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     function fitBackupBanner() {
         var b = document.getElementById('backupReminderBanner');
         var on = !!(b && b.style.display !== 'none');
+        var tb = document.querySelector('.topbar');
+        if (tb) {   // با بزرگ‌کردن فونت (زوم) ارتفاع نوار بالا عوض می‌شود؛ نوار پشتیبان هم دنبالش بیاید
+            document.documentElement.style.setProperty('--tb-h', tb.offsetHeight + 'px');
+            if (b) b.style.top = tb.offsetHeight + 'px';
+        }
         document.body.classList.toggle('backup-banner-on', on);
         document.documentElement.style.setProperty('--bk-h', (on ? b.offsetHeight : 0) + 'px');
     }
@@ -6055,6 +6042,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
             title = '📥 وقت پشتیبان‌گیری است!';
             sub = toPersianNum(days) + ' روز از آخرین پشتیبان گذشته. با یک کلیک دانلود کن.';
         }
+        sub += ' (پشتیبان فقط شامل سال تحصیلی ' + yearLabel(yearsState.current) + ' است.)';
         document.getElementById('brTitle').textContent = title;
         document.getElementById('brSub').textContent = sub;
         b.style.display = 'block';
@@ -6083,8 +6071,8 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     function updateLastBackupInfo() {
         var el = document.getElementById('lastBackupInfo');
         if (!el) return;
-        var date = localStorage.getItem(BACKUP_KEYS.lastBackupDate);
-        var ts = localStorage.getItem(BACKUP_KEYS.lastBackupTs);
+        var date = localStorage.getItem(bkYearKey(BACKUP_KEYS.lastBackupDate));
+        var ts = localStorage.getItem(bkYearKey(BACKUP_KEYS.lastBackupTs));
         if (!date) {
             el.textContent = 'هنوز پشتیبانی نگرفته‌ای';
             el.style.color = '#f59e0b';
@@ -6115,6 +6103,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     function checkBackupReminder() {
         var s = getBackupSettings();
         if (!s.enabled) { hideBackupBanner(); return; }
+        if (!appData.classes || !appData.classes.length) { hideBackupBanner(); return; }   // داده‌ای برای پشتیبان‌گیری نیست
         if (daysSinceLastBackup() < s.freq) { hideBackupBanner(); return; }
         if (new Date().getHours() < s.hour) { hideBackupBanner(); return; }
         var snooze = parseInt(localStorage.getItem(BACKUP_KEYS.snoozeUntil) || '0', 10);
@@ -6360,8 +6349,8 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     /* ═══════════════════════════════════════════════════
        🔄 به‌روزرسانی از GitHub
        ═══════════════════════════════════════════════════ */
-    var APP_VERSION = '1.2.12';
-    var realLS = window.localStorage, UPD_KEY = 'cmupd_v1';
+    var APP_VERSION = '1.2.13';
+    var realLS = localStorage, UPD_KEY = 'cmupd_v1';   // ذخیره‌گاه حساب کاربر (نه localStorage خام)
     var pendingUpdate = null;
 
     var UPD_REPO = 'ymasoomi68-glitch/Discipline', UPD_BRANCH = 'HEAD';
@@ -6412,6 +6401,17 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         var txt = document.getElementById('homeUpdateText');
         if (txt) txt.innerHTML = '🎉 ' + (ver ? 'نسخهٔ جدید <b>' + escapeHtml(fa(ver)) + '</b>' : 'نسخهٔ جدید برنامه') + ' آماده است. برای دریافت تغییرات، تأیید را بزنید.';
         hn.style.display = 'flex';
+        if (typeof currentPageName !== 'undefined' && currentPageName !== 'home') updToast();   // کاربر در صفحهٔ دیگری است
+    }
+    function updToast() {
+        var t = document.getElementById('updToast');
+        if (!t) {
+            t = document.createElement('div'); t.id = 'updToast';
+            t.style.cssText = 'position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:rgba(15,23,42,.94);color:#fff;padding:10px 18px;border-radius:24px;font-size:13.5px;z-index:5000;transition:opacity .25s;max-width:92%;text-align:center;pointer-events:none;';
+            document.body.appendChild(t);
+        }
+        t.textContent = '🎉 نسخهٔ جدید آماده است — در صفحهٔ اصلی «تأیید» را بزنید';
+        t.style.opacity = '1'; clearTimeout(t._h); t._h = setTimeout(function() { t.style.opacity = '0'; }, 4500);
     }
     // [update-confirm] فعال‌سازی Service Worker جدید (جایگزین installUpdate قبلی)
     function activateWaitingSW(w) {
@@ -6425,6 +6425,8 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         go();
     }
     function confirmUpdate() {
+        // نسخهٔ مورد انتظار ثبت می‌شود تا بعد از بارگذاری مجدد معلوم شود واقعاً نصب شده یا نه
+        try { if (pendingUpdate) realLS.setItem('cmupd_expect', pendingUpdate.version + '|' + Date.now()); } catch(e) {}
         var hn = document.getElementById('homeUpdateNotice'); if (hn) hn.style.display = 'none';   // [fix-confirm] بنر بلافاصله پنهان شود
         closeModal('modalUpdate');
         var w = window.__pendingSWWorker;
@@ -6505,6 +6507,16 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
             try { realLS.setItem('cmupd_snooze', ((pendingUpdate && pendingUpdate.version) || '') + '|' + Date.now()); } catch(e) {}
             if (hn) hn.style.display = 'none';
         });
+        // بعد از «بروزرسانی»: اگر هنوز نسخهٔ قبلی باز شد (نسخهٔ جدید هنوز روی سایت منتشر نشده)، به کاربر گفته شود
+        try {
+            var ex = String(realLS.getItem('cmupd_expect') || '').split('|');
+            if (ex[0]) {
+                realLS.removeItem('cmupd_expect');
+                if (Date.now() - Number(ex[1] || 0) < 5 * 60 * 1000 && verCmp(APP_VERSION, ex[0]) < 0) {
+                    setTimeout(function() { alert('⚠️ نسخهٔ جدید (' + fa(ex[0]) + ') هنوز کامل روی سایت منتشر نشده است و همان نسخهٔ فعلی باز شد.\n\nچند دقیقه بعد در «تنظیمات ← بررسی به‌روزرسانی» دوباره امتحان کنید.'); }, 1200);
+                }
+            }
+        } catch(e) {}
         var mi = document.getElementById('btnUpdModalInstall'); if (mi) mi.addEventListener('click', function() { confirmUpdate(); });  // [update-confirm]
         var mc = document.getElementById('btnUpdModalCancel');
         if (mc) mc.addEventListener('click', function() {
