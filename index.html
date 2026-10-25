@@ -6349,7 +6349,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     /* ═══════════════════════════════════════════════════
        🔄 به‌روزرسانی از GitHub
        ═══════════════════════════════════════════════════ */
-    var APP_VERSION = '1.2.14';
+    var APP_VERSION = '1.2.15';
     var realLS = localStorage, UPD_KEY = 'cmupd_v1';   // ذخیره‌گاه حساب کاربر (نه localStorage خام)
     var pendingUpdate = null;
 
@@ -6665,31 +6665,45 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
             check();
         };
         // (اسکریپت اصلی ممکن است بعد از رویداد load اجرا شود؛ پس اگر load گذشته بود، بلافاصله ثبت می‌کنیم)
-        var swRegister = function() {
+               var swRegister = function() {
             navigator.serviceWorker.register('./sw.js')
                 .then(function(reg) {
                     console.log('✅ Service Worker ثبت شد:', reg.scope);
-                    // نسخهٔ جدید از قبل در waiting است (مثلاً بعد از بستن و بازکردن برنامه)
-                                        if (reg.waiting && navigator.serviceWorker.controller) {
-                        // فقط اگر نسخه سرور واقعاً جدیدتر بود پیام بده
-                        fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
-                            .then(function(r) { return r.json(); })
-                            .then(function(j) {
-                                if (j && j.version && verCmp(j.version, APP_VERSION) > 0) {
-                                    window.__pendingSWWorker = reg.waiting;
-                                    showUpdateNotice();
-                                }
-                            })
-                            .catch(function(){});
-                    }
-                    swTrack(reg.installing);
+                    
+                    // چک کردن آپدیت وقتی اپ باز می‌شود
+                    var checkUpdate = function() {
+                        reg.update().then(function() {
+                            if (reg.waiting && navigator.serviceWorker.controller) {
+                                // نسخه جدید در حالت انتظار است
+                                fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
+                                    .then(function(r) { return r.json(); })
+                                    .then(function(j) {
+                                        if (j && j.version && verCmp(j.version, APP_VERSION) > 0) {
+                                            window.__pendingSWWorker = reg.waiting;
+                                            showUpdateNotice(); // نمایش پیام به کاربر
+                                        }
+                                    }).catch(function(){});
+                            }
+                        });
+                    };
+
+                    // هر بار کاربر اپ را از پس‌زمینه به جلو می‌آورد (برای موبایل خیلی مهم است)
+                    document.addEventListener('visibilitychange', function() {
+                        if (document.visibilityState === 'visible') {
+                            checkUpdate();
+                        }
+                    });
+
+                    // اولین بار که اپ لود می‌شود هم چک کن
+                    checkUpdate();
+
                     reg.addEventListener('updatefound', function() { swTrack(reg.installing); });
                 })
                 .catch(function(err) {
                     console.log('❌ خطا در ثبت Service Worker:', err);
                 });
         };
-        if (document.readyState === 'complete') swRegister(); else window.addEventListener('load', swRegister);
+        if (document.readyState === 'complete') swRegister(); else window.addEventListener('load', swRegister);;
         // وقتی SW جدید فعال شد، یک بار صفحه دوباره بارگذاری شود (نه در نصب اول)
         navigator.serviceWorker.addEventListener('controllerchange', function() {
             if (!swHadController || window.__swReloading) return;
