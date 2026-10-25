@@ -205,6 +205,14 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
     <button class="btn o block" data-close="ovAbs">انصراف</button>
 </div></div>
 
+<!-- نسخهٔ جدید برنامه -->
+<div class="ov" id="ovUpd"><div class="sheet">
+    <h2>🎉 نسخهٔ جدید آماده است</h2>
+    <p>برای دریافت تغییرات «بروزرسانی» را بزنید. اطلاعات شما حفظ می‌شود.</p>
+    <button class="btn block" id="updOk">⬇️ بروزرسانی</button>
+    <button class="btn o block" id="updLater">بعداً</button>
+</div></div>
+
 <!-- ساعت ورود (تأخیر) -->
 <div class="ov" id="ovLate"><div class="sheet">
     <h2 id="lateName">⏰ ساعت ورود به کلاس</h2>
@@ -605,9 +613,48 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
     });
 
     load(); render();
+    /* ===== به‌روزرسانی برنامه =====
+       نسخهٔ جدید سرویس‌ورکر خودش فعال نمی‌شود و در حالت «انتظار» می‌ماند؛ با «بروزرسانی» کاربر فعال می‌شود. */
     if ('serviceWorker' in navigator) {
-        var regSW = function() { navigator.serviceWorker.register('./sw.js').catch(function() {}); };
+        var swHadController = !!navigator.serviceWorker.controller, swWaiting = null, swReloading = false, swReg = null;
+        function showUpd() {
+            try { var sn = Number(S.getItem('upd_snooze') || 0); if (Date.now() - sn < 12 * 3600 * 1000) return; } catch(e) {}
+            openOv('ovUpd');
+        }
+        function swTrack(w) {
+            if (!w) return;
+            var chk = function() { if (w.state === 'installed' && navigator.serviceWorker.controller) { swWaiting = w; showUpd(); } };
+            w.addEventListener('statechange', chk); chk();
+        }
+        var regSW = function() {
+            navigator.serviceWorker.register('./sw.js').then(function(reg) {
+                swReg = reg;
+                if (reg.waiting && navigator.serviceWorker.controller) { swWaiting = reg.waiting; showUpd(); }
+                swTrack(reg.installing);
+                reg.addEventListener('updatefound', function() { swTrack(reg.installing); });
+            }).catch(function() {});
+        };
         if (document.readyState === 'complete') regSW(); else window.addEventListener('load', regSW);
+        $('updLater').onclick = function() { try { S.setItem('upd_snooze', String(Date.now())); } catch(e) {} closeOv('ovUpd'); };
+        $('updOk').onclick = function() {
+            closeOv('ovUpd');
+            var go = function() {
+                if (swWaiting) { try { swWaiting.postMessage({ type: 'SKIP_WAITING' }); } catch(e) {} }
+                setTimeout(function() { if (swReloading) return; swReloading = true; location.reload(); }, 1500);
+            };
+            try { var f = S.flush && S.flush(); if (f && f.then) { f.then(go, go); return; } } catch(e) {}
+            go();
+        };
+        navigator.serviceWorker.addEventListener('controllerchange', function() {
+            if (!swHadController || swReloading) return;
+            swReloading = true; location.reload();
+        });
+        // برنامه‌ای که مدتی در پس‌زمینه بوده: دوباره دنبال نسخهٔ جدید بگرد (حداکثر ساعتی یک بار)
+        var lastSwCheck = Date.now();
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden || !swReg || Date.now() - lastSwCheck < 3600 * 1000) return;
+            lastSwCheck = Date.now(); swReg.update().catch(function() {});
+        });
     }
     });
 })();
