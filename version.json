@@ -14,7 +14,7 @@
   "sha256": {
     "index.html": "d4d0345bad13dc5e7d9f2654f5aca3e7c2705efab822950b73aa82ee6ad43717",
     "teacher.html": "a08d40e1eff7ed8a52b5d011687936eb18149d1ea69b781d72a9e70728fa6f1a",
-    "sw.js": "d7f2f802aa48c17782c5a08f4b89c3e42591b04836eb6f2f3c29ef448e5b1b0a",
+    "sw.js": "48867d34301f46787ecc1d17ecdc11856c40d8366eff7dd58269c883392ce25c",
     "manifest.json": "d58ead88489a2b786cbe68165e9e4b0bafc325a35d65b611699800330d2daa31",
     "manifest-teacher.json": "f86a18047a0e754acbf83a1150e2bbb00e55282f2927bdde45e6009c722cda87"
   },
