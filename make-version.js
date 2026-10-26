@@ -15,13 +15,25 @@ for (const f of files) {
     }
 }
 
+// تغییرات این نسخه: از فایل release-notes.txt (هر خط یک تغییر) خوانده می‌شود و در «تنظیمات ← به‌روزرسانی برنامه» نشان داده می‌شود.
+// اگر فایل نبود یا خالی بود، متن پیش‌فرض نوشته می‌شود.
+let notes = [];
+if (fs.existsSync('release-notes.txt')) {
+    notes = fs.readFileSync('release-notes.txt', 'utf8')
+        .replace(/^﻿/, '')
+        .split(/\r?\n/)
+        .map(l => l.replace(/^\s*[-•*]\s*/, '').trim())
+        .filter(Boolean);
+}
+if (!notes.length) notes = ["به‌روزرسانی خودکار"];
+
 fs.writeFileSync('version.json', JSON.stringify({
     app: 'discipline-book',
     version,
-    notes: ["به‌روزرسانی خودکار"],
+    notes,
     files,
     sha256,
     date: new Date().toISOString().slice(0, 10)
 }, null, 2));
 
-console.log(`✅ version.json برای نسخهٔ ${version} ساخته شد.`);
+console.log(`✅ version.json برای نسخهٔ ${version} ساخته شد (${notes.length} مورد تغییرات).`);

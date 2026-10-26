@@ -7,11 +7,13 @@
 <meta name="cm-app" content="discipline-teacher">
 <meta name="theme-color" content="#059669">
 <link rel="manifest" href="manifest-teacher.json">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="حضور و غیاب">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon-t.png">
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;800&display=swap"></noscript>
 <script>
 /*!
     localForage -- Offline Storage, Improved
@@ -129,6 +131,11 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
     .btn.block { width: 100%; margin-top: 8px; }
     .empty { text-align: center; padding: 26px 10px; color: var(--muted); line-height: 2; }
     .empty .big { font-size: 46px; }
+    #btnSettings { position: relative; }
+    .upd-dot { display: none; position: absolute; top: 4px; left: 4px; width: 10px; height: 10px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 0 2px #fff; pointer-events: none; }
+    .upd-dot.on { display: block; }
+    .upd-new-badge { display: none; margin-right: 8px; padding: 1px 8px; border-radius: 10px; background: #ef4444; color: #fff; font-size: 11px; font-weight: 700; vertical-align: middle; }
+    .upd-new-badge.on { display: inline-block; }
     .ov { position: fixed; inset: 0; background: rgba(15,23,42,.55); display: none; align-items: flex-end; justify-content: center; z-index: 50; }
     .ov.open { display: flex; }
     .sheet { background: #fff; width: 100%; max-width: 560px; border-radius: 20px 20px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); max-height: 88vh; overflow: auto; }
@@ -149,7 +156,7 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
 <body>
 <header class="top">
     <div><h1>📋 سامانه حضور و غیاب</h1><div class="sub" id="whoLbl">برنامهٔ معلم</div></div>
-    <button class="icon-btn" id="btnSettings" aria-label="تنظیمات"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#065f46" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    <button class="icon-btn" id="btnSettings" aria-label="تنظیمات"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#065f46" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="upd-dot"></span></button>
 </header>
 
 <main class="wrap" id="main"></main>
@@ -172,8 +179,14 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
     <button class="btn o block" id="btnBackup">💾 پشتیبان‌گیری (دانلود فایل)</button>
     <button class="btn o block" id="btnRestore">📤 دریافت از فایل پشتیبان</button>
     <input type="file" id="fileRestore" accept=".json,application/json" style="display:none;">
+    <div style="margin:12px 0 4px;padding:12px;border:1px solid var(--border);border-radius:14px;">
+        <div style="font-weight:700;font-size:14px;">🔄 به‌روزرسانی برنامه <span class="upd-new-badge" id="updNewBadge">جدید</span></div>
+        <div style="font-size:12px;color:var(--muted);margin:6px 0 8px;line-height:1.8;">نسخهٔ فعلی: <b id="updCurrent">—</b><br>برنامه خودش به‌صورت خودکار و بی‌صدا به‌روز می‌شود و اطلاعات شما دست‌نخورده می‌ماند.</div>
+        <button class="btn o block" id="btnUpdCheck">🔄 بررسی به‌روزرسانی</button>
+        <div id="updStatus" style="font-size:13px;line-height:1.8;margin-top:8px;"></div>
+        <div id="updChanges" style="display:none;margin-top:10px;background:var(--bg);border-radius:10px;padding:10px 14px;font-size:13px;line-height:2;"></div>
+    </div>
     <button class="btn o block" data-close="ovSettings">بستن</button>
-    <p style="text-align:center;margin-top:12px;">نسخهٔ ۱.۲.۴</p>
 </div></div>
 
 <!-- ورود JSON -->
@@ -203,14 +216,6 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
     <button class="btn d block" id="absU">❌ غایب غیرموجه</button>
     <button class="btn o block" id="absClear">پاک کردن وضعیت</button>
     <button class="btn o block" data-close="ovAbs">انصراف</button>
-</div></div>
-
-<!-- نسخهٔ جدید برنامه -->
-<div class="ov" id="ovUpd"><div class="sheet">
-    <h2>🎉 نسخهٔ جدید آماده است</h2>
-    <p>برای دریافت تغییرات «بروزرسانی» را بزنید. اطلاعات شما حفظ می‌شود.</p>
-    <button class="btn block" id="updOk">⬇️ بروزرسانی</button>
-    <button class="btn o block" id="updLater">بعداً</button>
 </div></div>
 
 <!-- ساعت ورود (تأخیر) -->
@@ -456,7 +461,7 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
     $('btnCopy').onclick = function() { copyText(pendingMsg, function(ok) { if (ok) { markSent(); toast('📋 کپی شد؛ در شاد/ایتا بچسبانید'); } else toast('کپی نشد؛ متن را دستی انتخاب کنید'); }); };
 
     /* ===== تنظیمات ===== */
-    $('btnSettings').onclick = function() { $('inTeacher').value = cfg.teacher || ''; refreshInstallBtn(); openOv('ovSettings'); };
+    $('btnSettings').onclick = function() { $('inTeacher').value = cfg.teacher || ''; refreshInstallBtn(); openOv('ovSettings'); try { updOpened(); } catch(e) {} };
     $('btnSaveName').onclick = function() { cfg.teacher = $('inTeacher').value.trim(); saveCfg(); render(); toast('ذخیره شد'); };
     $('btnHistory').onclick = function() {
         closeOv('ovSettings');
@@ -613,49 +618,104 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
     });
 
     load(); render();
-    /* ===== به‌روزرسانی برنامه =====
-       نسخهٔ جدید سرویس‌ورکر خودش فعال نمی‌شود و در حالت «انتظار» می‌ماند؛ با «بروزرسانی» کاربر فعال می‌شود. */
+    /* ===== به‌روزرسانی خودکار =====
+       نسخهٔ جدید سرویس‌ورکر خودش نصب و فعال می‌شود. صفحه وسط کار دوباره بارگذاری نمی‌شود؛ هنگام رفتن به پس‌زمینه
+       (یا برگشت، اگر پنجره‌ای باز نبود) با ذخیرهٔ کامل داده‌ها بارگذاری می‌شود. تغییرات در «تنظیمات ← به‌روزرسانی برنامه» است. */
+    function verCmp(a, b) {
+        var x = String(a).split('.').map(Number), y = String(b).split('.').map(Number);
+        for (var i = 0; i < 3; i++) { var d = (x[i] || 0) - (y[i] || 0); if (d) return d > 0 ? 1 : -1; }
+        return 0;
+    }
+    function updMsg(html, bad) { var el = $('updStatus'); if (el) { el.innerHTML = html; el.style.color = bad === 'bad' ? '#dc2626' : bad === 'ok' ? '#059669' : 'var(--muted)'; } }
+    function updInfo() { try { return JSON.parse(S.getItem('upd_info') || 'null'); } catch(e) { return null; } }
+    function updUnseen() {
+        var inf = updInfo(), seen = null; try { seen = S.getItem('upd_seen'); } catch(e) {}
+        return !!(inf && seen && verCmp(inf.version, seen) > 0);
+    }
+    function updShowDots() {
+        var on = updUnseen();
+        Array.prototype.forEach.call(document.querySelectorAll('.upd-dot'), function(d) { d.classList.toggle('on', on); });
+        var b = $('updNewBadge'); if (b) b.classList.toggle('on', on);
+    }
+    function updRender() {
+        var inf = updInfo(), box = $('updChanges'); if (!box) return;
+        var c = $('updCurrent'); if (c) c.textContent = inf ? fa(inf.version) : '—';
+        if (!inf) { box.style.display = 'none'; return; }
+        var notes = inf.notes || [];
+        box.innerHTML = '<div style="font-weight:700;margin-bottom:4px;">✨ آخرین تغییرات — نسخهٔ ' + esc(fa(inf.version)) + '</div>' +
+            (notes.length ? '<ul style="margin:0;padding:0 18px 0 0;">' + notes.map(function(n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul>' : '<div>این نسخه شامل بهبودها و رفع اشکال‌هاست.</div>');
+        box.style.display = '';
+    }
+    function updFetchInfo() {
+        if (!navigator.onLine) return Promise.resolve();
+        return fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r) { return r.ok ? r.json() : null; }).then(function(j) {
+            if (!j || j.app !== 'discipline-book' || !/^\d+(\.\d+){0,2}$/.test(String(j.version))) return;
+            var notes = Array.isArray(j.notes) ? j.notes : (j.notes ? [String(j.notes)] : []);
+            try { S.setItem('upd_info', JSON.stringify({ version: String(j.version), notes: notes.map(String).slice(0, 30), date: j.date || '' })); } catch(e) {}
+        }).catch(function() {});
+    }
+    function updOpened() {   // تنظیمات باز شد: کادر نشان داده می‌شود و نقطهٔ «جدید» خاموش می‌شود
+        updRender();
+        updFetchInfo().then(function() { updRender(); try { var i = updInfo(); if (i) S.setItem('upd_seen', i.version); } catch(e) {} updShowDots(); });
+        try { var i = updInfo(); if (i) S.setItem('upd_seen', i.version); } catch(e) {}
+        updShowDots();
+    }
+    updFetchInfo().then(function() {
+        try { var i = updInfo(); if (i && !S.getItem('upd_seen')) S.setItem('upd_seen', i.version); } catch(e) {}   // نصب اول: بی‌صدا
+        updShowDots(); updRender();
+    });
     if ('serviceWorker' in navigator) {
-        var swHadController = !!navigator.serviceWorker.controller, swWaiting = null, swReloading = false, swReg = null;
-        function showUpd() {
-            try { var sn = Number(S.getItem('upd_snooze') || 0); if (Date.now() - sn < 12 * 3600 * 1000) return; } catch(e) {}
-            openOv('ovUpd');
+        var swHadController = !!navigator.serviceWorker.controller, swNeedReload = false, swApplyNow = false, swReloading = false, swReg = null;
+        function safeToReload() {
+            if (document.querySelector('.ov.open')) return false;
+            var a = document.activeElement;
+            return !(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));
         }
-        function swTrack(w) {
-            if (!w) return;
-            var chk = function() { if (w.state === 'installed' && navigator.serviceWorker.controller) { swWaiting = w; showUpd(); } };
-            w.addEventListener('statechange', chk); chk();
+        function applyReload() {
+            if (swReloading) return; swReloading = true;
+            var go = function() { location.reload(); };
+            try { var f = S.flush && S.flush(); if (f && f.then) { f.then(go, go); return; } } catch(e) {}
+            go();
         }
+        function swNudge(reg) { try { if (reg && reg.waiting && navigator.serviceWorker.controller) reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch(e) {} }   // اگر در حالت انتظار ماند، دوباره درخواست فعال‌سازی (بی‌ضرر)
         var regSW = function() {
             navigator.serviceWorker.register('./sw.js').then(function(reg) {
                 swReg = reg;
-                if (reg.waiting && navigator.serviceWorker.controller) { swWaiting = reg.waiting; showUpd(); }
-                swTrack(reg.installing);
-                reg.addEventListener('updatefound', function() { swTrack(reg.installing); });
+                reg.addEventListener('updatefound', function() { var w = reg.installing; if (w) w.addEventListener('statechange', function() { if (w.state === 'installed') swNudge(reg); }); });
+                reg.update().catch(function() {}).then(function() { swNudge(reg); });
             }).catch(function() {});
         };
         if (document.readyState === 'complete') regSW(); else window.addEventListener('load', regSW);
-        $('updLater').onclick = function() { try { S.setItem('upd_snooze', String(Date.now())); } catch(e) {} closeOv('ovUpd'); };
-        $('updOk').onclick = function() {
-            closeOv('ovUpd');
-            var go = function() {
-                if (swWaiting) { try { swWaiting.postMessage({ type: 'SKIP_WAITING' }); } catch(e) {} }
-                setTimeout(function() { if (swReloading) return; swReloading = true; location.reload(); }, 1500);
-            };
-            try { var f = S.flush && S.flush(); if (f && f.then) { f.then(go, go); return; } } catch(e) {}
-            go();
-        };
         navigator.serviceWorker.addEventListener('controllerchange', function() {
-            if (!swHadController || swReloading) return;
-            swReloading = true; location.reload();
+            if (!swHadController) return;   // نصب اول
+            swNeedReload = true;
+            if (swApplyNow || document.hidden) applyReload();
         });
-        // برنامه‌ای که مدتی در پس‌زمینه بوده: دوباره دنبال نسخهٔ جدید بگرد (حداکثر ساعتی یک بار)
         var lastSwCheck = Date.now();
         document.addEventListener('visibilitychange', function() {
-            if (document.hidden || !swReg || Date.now() - lastSwCheck < 3600 * 1000) return;
-            lastSwCheck = Date.now(); swReg.update().catch(function() {});
+            if (swNeedReload) { if (document.hidden || safeToReload()) applyReload(); return; }
+            if (document.hidden || !swReg || Date.now() - lastSwCheck < 10 * 60 * 1000) return;
+            lastSwCheck = Date.now(); swReg.update().catch(function() {}).then(function() { swNudge(swReg); });
         });
-    }
+        $('btnUpdCheck').onclick = function() {
+            if (!navigator.onLine) { updMsg('❌ اینترنت قطع است.', 'bad'); return; }
+            if (swNeedReload) { updMsg('⏳ نسخهٔ جدید نصب شد؛ در حال بارگذاری مجدد...'); applyReload(); return; }
+            updMsg('⏳ در حال بررسی...');
+            navigator.serviceWorker.getRegistration().then(function(reg) {
+                if (!reg) { updMsg('❌ برنامه هنوز کامل نصب نشده است؛ چند لحظه بعد دوباره امتحان کنید.', 'bad'); return; }
+                return reg.update().catch(function() {}).then(function() { swNudge(reg); }).then(function() {
+                    if (swNeedReload) { updMsg('⏳ نسخهٔ جدید نصب شد؛ در حال بارگذاری مجدد...'); applyReload(); return; }
+                    if (reg.installing || reg.waiting) {
+                        swApplyNow = true;
+                        updMsg('⏳ نسخهٔ جدید دریافت شد و در حال نصب است؛ برنامه خودکار دوباره بارگذاری می‌شود...');
+                        setTimeout(function() { if (!swReloading) { swApplyNow = false; updMsg('❌ نصب کامل نشد. چند دقیقه بعد دوباره امتحان کنید.', 'bad'); } }, 20000);
+                        return;
+                    }
+                    updFetchInfo().then(function() { updRender(); updMsg('✅ برنامه به‌روز است.', 'ok'); });
+                });
+            }).catch(function() { updMsg('❌ بررسی انجام نشد. بعداً دوباره امتحان کنید.', 'bad'); });
+        };
+    } else { $('btnUpdCheck').onclick = function() { updMsg('❌ این مرورگر به‌روزرسانی خودکار را پشتیبانی نمی‌کند.', 'bad'); }; }
     });
 })();
 </script>
