@@ -2541,7 +2541,7 @@ var CMAuth = (function(){
                 function(ex){ showErr(ex.message); });
         });
         var left=lockLeft(); if(left) showErr('به دلیل تلاش‌های ناموفق پیاپی، ' + left + ' ثانیهٔ دیگر دوباره تلاش کنید.');
-        if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(function(){});
+        if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(function(){});
     }
 
     return {validCode:validCode, signup:signup, login:login, logout:logout, changePassword:changePassword, deleteAccount:deleteAccount, resetUserData:resetUserData,
@@ -6336,7 +6336,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     /* ═══════════════════════════════════════════════════
        🔄 به‌روزرسانی از GitHub
        ═══════════════════════════════════════════════════ */
-    var APP_VERSION = '1.2.17';
+    var APP_VERSION = '1.2.19';
     var realLS = localStorage, UPD_KEY = 'cmupd_v1';   // ذخیره‌گاه حساب کاربر (نه localStorage خام)
 
     var UPD_REPO = 'ymasoomi68-glitch/Discipline', UPD_BRANCH = 'HEAD';
@@ -6386,9 +6386,27 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     function swNudge(reg) {
         try { if (reg && reg.waiting && navigator.serviceWorker.controller) reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch(e) {}
     }
+    // پیام کوچک پایین صفحه هنگام نصب نسخهٔ جدید (کار کاربر را مختل نمی‌کند)
+    function swUpdToast(show) {
+        var t = document.getElementById('swUpdToast');
+        if (!t) {
+            if (!show) return;
+            t = document.createElement('div'); t.id = 'swUpdToast';
+            t.style.cssText = 'position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:rgba(15,23,42,.92);color:#fff;padding:10px 18px;border-radius:24px;font-size:13.5px;z-index:5000;transition:opacity .25s;pointer-events:none;font-family:inherit;opacity:0;max-width:90%;text-align:center;';
+            t.textContent = '🔄 در حال به‌روزرسانی خودکار...';
+            document.body.appendChild(t);
+        }
+        clearTimeout(t._h);
+        if (show) { t.style.opacity = '1'; t._h = setTimeout(function() { t.style.opacity = '0'; }, 8000); }
+        else t.style.opacity = '0';
+    }
     function swWatch(reg) {
         var w = reg.installing; if (!w) return;
-        w.addEventListener('statechange', function() { if (w.state === 'installed') swNudge(reg); });
+        if (navigator.serviceWorker.controller) swUpdToast(true);   // فقط وقتی نسخهٔ جدید جایگزین نسخهٔ نصب‌شده می‌شود (نه نصب اول)
+        w.addEventListener('statechange', function() {
+            if (w.state === 'installed') swNudge(reg);
+            if (w.state === 'activated' || w.state === 'redundant') swUpdToast(false);
+        });
     }
     function updRead() { try { return JSON.parse(realLS.getItem('cmupd_info') || 'null'); } catch(e) { return null; } }
     function updUnseen() {
@@ -6586,17 +6604,18 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     // نسخهٔ جدید خودکار نصب می‌شود (بدون پرسش)؛ جزئیات در بخش «به‌روزرسانی خودکار»
     if ('serviceWorker' in navigator) {
         var swRegister = function() {
-            navigator.serviceWorker.register('./sw.js')
+            navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })   // مرورگر همیشه sw.js را از شبکه چک کند (نه از کش HTTP)
                 .then(function(reg) {
                     var lastSwCheck = Date.now();
-                    // هر بار کاربر اپ را از پس‌زمینه به جلو می‌آورد (برای موبایل مهم است؛ حداکثر هر ۱۰ دقیقه)
+                    // هر بار کاربر اپ را از پس‌زمینه به جلو می‌آورد (برای موبایل مهم است؛ حداکثر هر ۱ دقیقه)
                     document.addEventListener('visibilitychange', function() {
-                        if (document.visibilityState === 'visible' && Date.now() - lastSwCheck > 10 * 60 * 1000) {
+                        if (document.visibilityState === 'visible' && Date.now() - lastSwCheck > 60 * 1000) {
                             lastSwCheck = Date.now();
                             reg.update().catch(function() {}).then(function() { swNudge(reg); });
                         }
                     });
                     reg.addEventListener('updatefound', function() { swWatch(reg); });
+                    if (reg.installing) swWatch(reg);
                     reg.update().catch(function() {}).then(function() { swNudge(reg); });   // هنگام باز شدن برنامه هم بررسی شود
                 })
                 .catch(function(err) {

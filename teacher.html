@@ -96,7 +96,8 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { margin: 0; }
     body { font-family: 'Vazirmatn', Tahoma, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 96px; }
-    button { font-family: inherit; cursor: pointer; }
+    button, select, input, textarea { font-family: inherit; }   /* select هم مثل نسخهٔ معاون فونت وزیرمتن بگیرد (قبلاً فونت سیستم بود) */
+    button { cursor: pointer; }
     .top { background: linear-gradient(135deg, #065f46, #10b981); color: #fff; padding: 14px 16px calc(14px); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 20; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
     .top h1 { margin: 0; font-size: 18px; font-weight: 800; }
     .top .sub { font-size: 12px; opacity: .9; }
@@ -140,6 +141,13 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
     .ov.open { display: flex; }
     .sheet { background: #fff; width: 100%; max-width: 560px; border-radius: 20px 20px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); max-height: 88vh; overflow: auto; }
     .sheet h2 { margin: 0 0 10px; font-size: 17px; }
+    /* پنجرهٔ وسط صفحه (مثل نسخهٔ معاون): برای ساعت ورود تأخیر */
+    .ov.ov-center { align-items: center; padding: 20px; background: rgba(0,0,0,.5); }
+    .modal-box { background: #fff; border-radius: 12px; padding: 24px; max-width: 420px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+    .modal-title { margin: 0 0 18px; padding-bottom: 12px; font-size: 18px; font-weight: 700; color: var(--text); border-bottom: 2px solid #d1fae5; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+    .modal-actions .btn { width: auto; margin-top: 0; padding: 10px 18px; border-radius: 8px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+    @media (max-width: 768px) { .modal-box { padding: 16px; } }
     .sheet p { color: var(--muted); font-size: 13px; line-height: 1.9; margin: 0 0 10px; }
     input[type=text], input[type=file], textarea { width: 100%; border: 1px solid var(--border); border-radius: 12px; padding: 11px 12px; font: inherit; font-size: 14px; margin-bottom: 8px; background: #fff; }
     textarea { min-height: 150px; direction: rtl; }
@@ -218,17 +226,20 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
     <button class="btn o block" data-close="ovAbs">انصراف</button>
 </div></div>
 
-<!-- ساعت ورود (تأخیر) -->
-<div class="ov" id="ovLate"><div class="sheet">
-    <h2 id="lateName">⏰ ساعت ورود به کلاس</h2>
+<!-- ساعت ورود (تأخیر) — پنجرهٔ وسط صفحه، دقیقاً مثل نسخهٔ معاون -->
+<div class="ov ov-center" id="ovLate"><div class="modal-box">
+    <h2 class="modal-title">⏰ ساعت ورود به کلاس</h2>
+    <div id="lateName" style="font-size:14px;font-weight:600;margin-bottom:12px;"></div>
     <div style="direction:ltr;display:flex;align-items:center;justify-content:center;gap:10px;margin:6px 0 14px;">
-        <select id="lateH" aria-label="ساعت" style="font-size:24px;font-weight:700;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:#fff;min-width:84px;text-align:center;text-align-last:center;"></select>
+        <select id="lateH" aria-label="ساعت" style="font-family:inherit;font-size:24px;font-weight:700;padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;min-width:84px;text-align:center;text-align-last:center;"></select>
         <span style="font-size:26px;font-weight:700;">:</span>
-        <select id="lateM" aria-label="دقیقه" style="font-size:24px;font-weight:700;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:#fff;min-width:84px;text-align:center;text-align-last:center;"></select>
+        <select id="lateM" aria-label="دقیقه" style="font-family:inherit;font-size:24px;font-weight:700;padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;min-width:84px;text-align:center;text-align-last:center;"></select>
     </div>
-    <button class="btn block" id="lateOk" style="background:#d97706;">⏰ ثبت تأخیر</button>
-    <button class="btn o block" id="lateClear">پاک کردن تأخیر</button>
-    <button class="btn o block" data-close="ovLate">انصراف</button>
+    <div class="modal-actions">
+        <button class="btn" id="lateOk" style="background:#d97706;">ثبت تأخیر</button>
+        <button class="btn o" id="lateClear">پاک کردن تأخیر</button>
+        <button class="btn o" data-close="ovLate">انصراف</button>
+    </div>
 </div></div>
 
 <!-- پیام ارسال -->
@@ -264,7 +275,7 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
     function norm(t) { return String(t == null ? '' : t).replace(/ي/g, 'ی').replace(/ك/g, 'ک').replace(/\s+/g, ' ').trim(); }
     function digits(v) { return String(v == null ? '' : v).replace(/[۰-۹]/g, function(d) { return '۰۱۲۳۴۵۶۷۸۹'.indexOf(d); }).replace(/[٠-٩]/g, function(d) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); }); }
     var toastT;
-    function toast(m) { var t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(function() { t.classList.remove('on'); }, 2200); }
+    function toast(m, ms) { var t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(function() { t.classList.remove('on'); }, ms || 2200); }
     function openOv(id) { $(id).classList.add('open'); }
     function closeOv(id) { $(id).classList.remove('open'); }
     document.querySelectorAll('[data-close]').forEach(function(b) { b.addEventListener('click', function() { closeOv(b.getAttribute('data-close')); }); });
@@ -356,7 +367,7 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
             h += '<div class="row"><div class="nm">' + fa(i + 1) + '. ' + esc((s.family || '') + ' ' + (s.name || '')) + (s.father ? '<i>فرزند ' + esc(s.father) + '</i>' : '') + '</div><div class="bt" data-s="' + s.id + '">' +
                 '<button class="ab' + (v === 'present' ? ' on' : '') + '" data-s="present">حاضر</button>' +
                 '<button class="ab' + (v === 'absent_j' || v === 'absent_u' ? ' on' : '') + '" data-s="absent">' + absLbl + '</button>' +
-                '<button class="ab' + (v === 'late' ? ' on' : '') + '" data-s="late"><span style="line-height:1.2;">تأخیر' + (v === 'late' && ltm[s.id] ? '<br><small style="font-size:11px;font-weight:600;">' + faTime(ltm[s.id]) + '</small>' : '') + '</span></button></div></div>';
+                '<button class="ab' + (v === 'late' ? ' on' : '') + '" data-s="late"><span style="line-height:1.2;">تأخیر' + (v === 'late' && ltm[s.id] ? '<br><small style="font-size:10.5px;font-weight:600;">' + faTime(ltm[s.id]) + '</small>' : '') + '</span></button></div></div>';
         });
         m.innerHTML = h;
         $('bar').style.display = c.students.length ? 'flex' : 'none';
@@ -394,7 +405,7 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
     function askLate(c, sid) {
         var s = c.students.filter(function(x) { return x.id === sid; })[0];
         lateCtx = { c: c, sid: sid };
-        $('lateName').textContent = '⏰ ساعت ورود — ' + ((s.family || '') + ' ' + (s.name || ''));
+        $('lateName').textContent = (s.family || '') + ' ' + (s.name || '');
         /* پیش‌فرض: ساعت فعلی سیستم؛ اگر قبلاً ساعت ثبت شده، همان */
         var now = new Date(), hh = now.getHours(), mm = now.getMinutes();
         var m0 = /^(\d{2}):(\d{2})$/.exec(ltMap(c)[sid] || '');
@@ -403,13 +414,29 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
         $('lateClear').style.display = dayMap(c)[sid] === 'late' ? '' : 'none';
         openOv('ovLate');
     }
+    /* بعد از بستن پنجره، لیست در همان جای قبلی می‌ماند (بالا نمی‌پرد) */
+    function renderKeepScroll() { var y = window.scrollY; render(); window.scrollTo(0, y); }
     function lateSubmit() {
         var t = $('lateH').value + ':' + $('lateM').value;
         var dm = dayMap(lateCtx.c, true); dm[lateCtx.sid] = 'late'; setLT(lateCtx.c, lateCtx.sid, t);
-        saveA(); saveLT(); closeOv('ovLate'); render();
+        saveA(); saveLT(); closeOv('ovLate'); renderKeepScroll();
     }
     $('lateOk').onclick = lateSubmit;
-    $('lateClear').onclick = function() { var dm = dayMap(lateCtx.c, true); delete dm[lateCtx.sid]; setLT(lateCtx.c, lateCtx.sid, ''); saveA(); saveLT(); closeOv('ovLate'); render(); };
+    $('lateClear').onclick = function() { var dm = dayMap(lateCtx.c, true); delete dm[lateCtx.sid]; setLT(lateCtx.c, lateCtx.sid, ''); saveA(); saveLT(); closeOv('ovLate'); renderKeepScroll(); };
+    /* دکمهٔ «برگشت» گوشی پنجرهٔ ساعت ورود را می‌بندد (مثل نسخهٔ معاون) و از برنامه خارج نمی‌شود */
+    (function() {
+        var ov = $('ovLate'), hist = false, ignore = 0, y = 0;
+        function sync() {
+            var open = ov.classList.contains('open');
+            if (open && !hist) { try { history.pushState({ tchLate: 1 }, ''); hist = true; } catch(e) {} }
+            else if (!open && hist) { hist = false; y = window.scrollY; ignore++; try { history.back(); } catch(e) { ignore--; } }
+        }
+        try { new MutationObserver(sync).observe(ov, { attributes: true, attributeFilter: ['class'] }); } catch(e) {}
+        window.addEventListener('popstate', function() {
+            if (ignore > 0) { ignore--; window.scrollTo(0, y); return; }
+            if (hist && ov.classList.contains('open')) { hist = false; ov.classList.remove('open'); }
+        });
+    })();
     $('absJ').onclick = function() { setAbs('absent_j'); };
     $('absU').onclick = function() { setAbs('absent_u'); };
     $('absClear').onclick = function() { setAbs(''); };
@@ -619,6 +646,9 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
 
     load(); render();
     /* ===== به‌روزرسانی خودکار =====
+       نسخهٔ این برنامه (باید با index.html یکی باشد؛ make-version.js این را کنترل می‌کند) */
+    var APP_VERSION = '1.2.19';
+    /* 
        نسخهٔ جدید سرویس‌ورکر خودش نصب و فعال می‌شود. صفحه وسط کار دوباره بارگذاری نمی‌شود؛ هنگام رفتن به پس‌زمینه
        (یا برگشت، اگر پنجره‌ای باز نبود) با ذخیرهٔ کامل داده‌ها بارگذاری می‌شود. تغییرات در «تنظیمات ← به‌روزرسانی برنامه» است. */
     function verCmp(a, b) {
@@ -629,8 +659,8 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
     function updMsg(html, bad) { var el = $('updStatus'); if (el) { el.innerHTML = html; el.style.color = bad === 'bad' ? '#dc2626' : bad === 'ok' ? '#059669' : 'var(--muted)'; } }
     function updInfo() { try { return JSON.parse(S.getItem('upd_info') || 'null'); } catch(e) { return null; } }
     function updUnseen() {
-        var inf = updInfo(), seen = null; try { seen = S.getItem('upd_seen'); } catch(e) {}
-        return !!(inf && seen && verCmp(inf.version, seen) > 0);
+        var seen = null; try { seen = S.getItem('upd_seen'); } catch(e) {}
+        return !!seen && verCmp(APP_VERSION, seen) > 0;
     }
     function updShowDots() {
         var on = updUnseen();
@@ -638,30 +668,30 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
         var b = $('updNewBadge'); if (b) b.classList.toggle('on', on);
     }
     function updRender() {
-        var inf = updInfo(), box = $('updChanges'); if (!box) return;
-        var c = $('updCurrent'); if (c) c.textContent = inf ? fa(inf.version) : '—';
-        if (!inf) { box.style.display = 'none'; return; }
-        var notes = inf.notes || [];
-        box.innerHTML = '<div style="font-weight:700;margin-bottom:4px;">✨ آخرین تغییرات — نسخهٔ ' + esc(fa(inf.version)) + '</div>' +
+        var inf = updInfo(), box = $('updChanges');
+        var c = $('updCurrent'); if (c) c.textContent = fa(APP_VERSION);   // نسخهٔ واقعیِ نصب‌شده (نه نسخهٔ روی سرور)
+        if (!box) return;
+        var notes = (inf && inf.version === APP_VERSION && inf.notes) ? inf.notes : [];
+        box.innerHTML = '<div style="font-weight:700;margin-bottom:4px;">✨ آخرین تغییرات — نسخهٔ ' + esc(fa(APP_VERSION)) + '</div>' +
             (notes.length ? '<ul style="margin:0;padding:0 18px 0 0;">' + notes.map(function(n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul>' : '<div>این نسخه شامل بهبودها و رفع اشکال‌هاست.</div>');
         box.style.display = '';
     }
     function updFetchInfo() {
         if (!navigator.onLine) return Promise.resolve();
         return fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r) { return r.ok ? r.json() : null; }).then(function(j) {
-            if (!j || j.app !== 'discipline-book' || !/^\d+(\.\d+){0,2}$/.test(String(j.version))) return;
+            if (!j || j.app !== 'discipline-book' || String(j.version) !== APP_VERSION) return;   // سایت نسخهٔ دیگری دارد: برای این نسخه ذخیره نشود
             var notes = Array.isArray(j.notes) ? j.notes : (j.notes ? [String(j.notes)] : []);
-            try { S.setItem('upd_info', JSON.stringify({ version: String(j.version), notes: notes.map(String).slice(0, 30), date: j.date || '' })); } catch(e) {}
+            try { S.setItem('upd_info', JSON.stringify({ version: APP_VERSION, notes: notes.map(String).slice(0, 30), date: j.date || '' })); } catch(e) {}
         }).catch(function() {});
     }
     function updOpened() {   // تنظیمات باز شد: کادر نشان داده می‌شود و نقطهٔ «جدید» خاموش می‌شود
         updRender();
-        updFetchInfo().then(function() { updRender(); try { var i = updInfo(); if (i) S.setItem('upd_seen', i.version); } catch(e) {} updShowDots(); });
-        try { var i = updInfo(); if (i) S.setItem('upd_seen', i.version); } catch(e) {}
+        updFetchInfo().then(function() { updRender(); });
+        try { S.setItem('upd_seen', APP_VERSION); } catch(e) {}   // کادر دیده شد: نقطهٔ «جدید» خاموش
         updShowDots();
     }
     updFetchInfo().then(function() {
-        try { var i = updInfo(); if (i && !S.getItem('upd_seen')) S.setItem('upd_seen', i.version); } catch(e) {}   // نصب اول: بی‌صدا
+        try { if (!S.getItem('upd_seen')) S.setItem('upd_seen', APP_VERSION); } catch(e) {}   // نصب اول: بی‌صدا
         updShowDots(); updRender();
     });
     if ('serviceWorker' in navigator) {
@@ -679,9 +709,15 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
         }
         function swNudge(reg) { try { if (reg && reg.waiting && navigator.serviceWorker.controller) reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch(e) {} }   // اگر در حالت انتظار ماند، دوباره درخواست فعال‌سازی (بی‌ضرر)
         var regSW = function() {
-            navigator.serviceWorker.register('./sw.js').then(function(reg) {
+            navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(function(reg) {   // مرورگر همیشه sw.js را از شبکه چک کند (نه از کش HTTP)
                 swReg = reg;
-                reg.addEventListener('updatefound', function() { var w = reg.installing; if (w) w.addEventListener('statechange', function() { if (w.state === 'installed') swNudge(reg); }); });
+                function watch() {
+                    var w = reg.installing; if (!w) return;
+                    if (navigator.serviceWorker.controller) toast('🔄 در حال به‌روزرسانی خودکار...', 5000);   // فقط وقتی نسخهٔ جدید جایگزین نسخهٔ نصب‌شده می‌شود (نه نصب اول)
+                    w.addEventListener('statechange', function() { if (w.state === 'installed') swNudge(reg); });
+                }
+                reg.addEventListener('updatefound', watch);
+                if (reg.installing) watch();
                 reg.update().catch(function() {}).then(function() { swNudge(reg); });
             }).catch(function() {});
         };
@@ -694,7 +730,7 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
         var lastSwCheck = Date.now();
         document.addEventListener('visibilitychange', function() {
             if (swNeedReload) { if (document.hidden || safeToReload()) applyReload(); return; }
-            if (document.hidden || !swReg || Date.now() - lastSwCheck < 10 * 60 * 1000) return;
+            if (document.hidden || !swReg || Date.now() - lastSwCheck < 60 * 1000) return;
             lastSwCheck = Date.now(); swReg.update().catch(function() {}).then(function() { swNudge(swReg); });
         });
         $('btnUpdCheck').onclick = function() {
@@ -711,7 +747,12 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
                         setTimeout(function() { if (!swReloading) { swApplyNow = false; updMsg('❌ نصب کامل نشد. چند دقیقه بعد دوباره امتحان کنید.', 'bad'); } }, 20000);
                         return;
                     }
-                    updFetchInfo().then(function() { updRender(); updMsg('✅ برنامه به‌روز است.', 'ok'); });
+                    return fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; }).then(function(j) {
+                        if (j && j.app === 'discipline-book' && verCmp(j.version, APP_VERSION) > 0) {
+                            updMsg('⏳ نسخهٔ ' + esc(fa(j.version)) + ' منتشر شده ولی هنوز کامل دریافت نشده است. چند دقیقه بعد دوباره امتحان کنید.', 'bad'); return;
+                        }
+                        return updFetchInfo().then(function() { updRender(); updMsg('✅ نسخهٔ شما (' + esc(fa(APP_VERSION)) + ') به‌روز است.', 'ok'); });
+                    });
                 });
             }).catch(function() { updMsg('❌ بررسی انجام نشد. بعداً دوباره امتحان کنید.', 'bad'); });
         };

@@ -2,7 +2,7 @@
    📱 Service Worker - دفتر انضباطی
    ═══════════════════════════════════════════════════ */
 
-var CACHE_NAME = 'discipline-book-v16';
+var CACHE_NAME = 'discipline-book-v1.2.19-d036b4b8'; // [auto] این خط را make-version.js خودکار به‌روز می‌کند (بر اساس محتوای فایل‌ها)؛ دستی تغییرش ندهید
 var CACHE_PREFIX = 'discipline-book-'; // فقط کش‌های همین برنامه؛ به کش برنامه‌های دیگرِ همین دامنه دست نمی‌زنیم
 var CACHE_FILES = [
     './',
@@ -67,6 +67,51 @@ self.addEventListener('message', function(event) {
 });
 
 // ===== دریافت =====
+// صفحه‌ها (index.html / teacher.html): Stale-While-Revalidate
+//   ← نسخهٔ کش‌شده فوراً نمایش داده می‌شود (سرعت بالا، کار آفلاین)
+//   ← همزمان در پس‌زمینه نسخهٔ تازه از شبکه (بدون کش HTTP) گرفته و کش به‌روز می‌شود
+//   پس حتی اگر sw.js بدون تغییر بماند، صفحهٔ جدید در بازشدن بعدی نمایش داده می‌شود.
+// بقیهٔ فایل‌ها (آیکون و ...): Cache First.
+// فقط از کش خودِ همین برنامه (CACHE_NAME) خوانده/نوشته می‌شود؛ به کش برنامه‌های دیگر دست نمی‌زنیم.
+function isPageRequest(request, url) {
+    return request.mode === 'navigate' || /\/(index\.html|teacher\.html)?$/.test(url.pathname);
+}
+
+function offlinePage(url) {
+    var page = /teacher\.html$/.test(url.pathname) ? './teacher.html' : './index.html';
+    return caches.open(CACHE_NAME).then(function(cache) {
+        return cache.match(new URL(page, self.location.href).href);
+    });
+}
+
+function staleWhileRevalidate(event, url) {
+    var key = url.origin + url.pathname;   // بدون پارامترهای آدرس
+    return caches.open(CACHE_NAME).then(function(cache) {
+        return cache.match(key, { ignoreSearch: true }).then(function(cached) {
+            if (cached) {
+                // نسخهٔ کش‌شده را بده و در پس‌زمینه تازه‌سازی کن (waitUntil: اندروید سرویس‌ورکر را وسط کار نکشد)
+                var refresh = fetch(key, { cache: 'reload' }).then(function(response) {
+                    if (response && response.status === 200 && response.type === 'basic' && !response.redirected) {
+                        return cache.put(key, response.clone());
+                    }
+                }).catch(function() { /* آفلاین یا خطا: نسخهٔ کش‌شده می‌ماند */ });
+                event.waitUntil(refresh);
+                return cached;
+            }
+            // هنوز در کش نیست: از شبکه بگیر و ذخیره کن
+            return fetch(event.request).then(function(response) {
+                if (response && response.status === 200 && response.type === 'basic' && !response.redirected) {
+                    var rc = response.clone();
+                    cache.put(key, rc);
+                }
+                return response;
+            }).catch(function() {
+                return offlinePage(url);
+            });
+        });
+    });
+}
+
 self.addEventListener('fetch', function(event) {
     // فقط درخواست‌های GET رو کش کن
     if (event.request.method !== 'GET') return;
@@ -80,46 +125,31 @@ self.addEventListener('fetch', function(event) {
     // فایل نسخه و لیست لایسنس همیشه از شبکه خوانده شود
     if (/\/(version|licenses)\.json$/.test(reqUrl.pathname)) return;
 
-    // صفحه‌ها (برنامهٔ معاون و برنامهٔ معلم): از کش (نسخهٔ نصب‌شده)؛ نسخهٔ جدید خودکار نصب می‌شود.
-    // اگر هنوز در کش نبود، از شبکه می‌آید و ذخیره می‌شود.
-    if (event.request.mode === 'navigate' || /\/(index\.html|teacher\.html)?$/.test(reqUrl.pathname)) {
-        event.respondWith(
-            caches.match(event.request, { ignoreSearch: true }).then(function(c) {
-                if (c) return c;
-                return fetch(event.request).then(function(response) {
-                    if (response && response.status === 200 && response.type !== 'opaque') {
-                        var rc = response.clone();
-                        caches.open(CACHE_NAME).then(function(cache) { cache.put(reqUrl.origin + reqUrl.pathname, rc); });
-                    }
-                    return response;
-                }).catch(function() {
-                    return caches.match(/teacher\.html$/.test(reqUrl.pathname) ? './teacher.html' : './index.html');
-                });
-            })
-        );
+    // صفحه‌ها: Stale-While-Revalidate
+    if (isPageRequest(event.request, reqUrl)) {
+        event.respondWith(staleWhileRevalidate(event, reqUrl));
         return;
     }
 
+    // بقیه: Cache First
     event.respondWith(
-        caches.match(event.request).then(function(cached) {
-            // اگه توی کش هست، برگردون (Cache First)
-            if (cached) return cached;
+        caches.open(CACHE_NAME).then(function(cache) {
+            return cache.match(event.request).then(function(cached) {
+                // اگه توی کش هست، برگردون
+                if (cached) return cached;
 
-            // وگرنه از شبکه بگیر
-            return fetch(event.request).then(function(response) {
-                // فقط پاسخ‌های موفق رو کش کن
-                if (!response || response.status !== 200 || response.type === 'opaque') {
+                // وگرنه از شبکه بگیر
+                return fetch(event.request).then(function(response) {
+                    // فقط پاسخ‌های موفق رو کش کن
+                    if (!response || response.status !== 200 || response.type === 'opaque') {
+                        return response;
+                    }
+                    cache.put(event.request, response.clone());
                     return response;
-                }
-
-                var responseClone = response.clone();
-                caches.open(CACHE_NAME).then(function(cache) {
-                    cache.put(event.request, responseClone);
+                }).catch(function() {
+                    // اگه شبکه نبود، صفحهٔ اصلی رو برگردون
+                    return offlinePage(reqUrl);
                 });
-                return response;
-            }).catch(function() {
-                // اگه شبکه نبود، صفحهٔ اصلی رو برگردون
-                return caches.match('./index.html');
             });
         })
     );
