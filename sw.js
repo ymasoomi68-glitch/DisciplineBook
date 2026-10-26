@@ -2,7 +2,7 @@
    📱 Service Worker - دفتر انضباطی
    ═══════════════════════════════════════════════════ */
 
-var CACHE_NAME = 'discipline-book-v15';
+var CACHE_NAME = 'discipline-book-v16';
 var CACHE_PREFIX = 'discipline-book-'; // فقط کش‌های همین برنامه؛ به کش برنامه‌های دیگرِ همین دامنه دست نمی‌زنیم
 var CACHE_FILES = [
     './',
@@ -21,8 +21,8 @@ var CACHE_FILES = [
 ];
 
 // ===== نصب =====
-// [update-confirm] نسخهٔ جدید skipWaiting نمی‌کند: در حالت «waiting» می‌ماند تا کاربر در برنامه «تأیید» بزند
-// (برنامه پیام SKIP_WAITING می‌فرستد). صفحهٔ اصلی تا آن زمان از کشِ نسخهٔ فعلی خوانده می‌شود.
+// [auto-update] نسخهٔ جدید بعد از نصب موفق، خودش فوراً فعال می‌شود (skipWaiting)؛ برنامه آن را بی‌صدا اعمال می‌کند
+// و تغییرات را در «تنظیمات ← به‌روزرسانی برنامه» نشان می‌دهد.
 self.addEventListener('install', function(event) {
     console.log('🔄 Service Worker در حال نصب...');
     event.waitUntil(
@@ -39,7 +39,8 @@ self.addEventListener('install', function(event) {
             }));
         })
     );
-    // [update-confirm] self.skipWaiting() عمداً حذف شده است
+    // فعال‌سازی فقط بعد از پایان موفق نصب انجام می‌شود؛ اگر نصب خطا بدهد نسخهٔ قبلی دست‌نخورده می‌ماند
+    self.skipWaiting();
 });
 
 // ===== فعال‌سازی =====
@@ -58,7 +59,7 @@ self.addEventListener('activate', function(event) {
     })());
 });
 
-// [update-confirm] فعال‌سازی نسخهٔ جدید فقط با تأیید کاربر
+// سازگاری با نسخه‌های قبلیِ برنامه که پیام SKIP_WAITING می‌فرستادند
 self.addEventListener('message', function(event) {
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
@@ -79,7 +80,7 @@ self.addEventListener('fetch', function(event) {
     // فایل نسخه و لیست لایسنس همیشه از شبکه خوانده شود
     if (/\/(version|licenses)\.json$/.test(reqUrl.pathname)) return;
 
-    // صفحه‌ها (برنامهٔ معاون و برنامهٔ معلم): از کش (نسخهٔ نصب‌شده)؛ نسخهٔ جدید فقط با تأیید کاربر در خود برنامه نصب می‌شود.
+    // صفحه‌ها (برنامهٔ معاون و برنامهٔ معلم): از کش (نسخهٔ نصب‌شده)؛ نسخهٔ جدید خودکار نصب می‌شود.
     // اگر هنوز در کش نبود، از شبکه می‌آید و ذخیره می‌شود.
     if (event.request.mode === 'navigate' || /\/(index\.html|teacher\.html)?$/.test(reqUrl.pathname)) {
         event.respondWith(
