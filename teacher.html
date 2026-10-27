@@ -460,7 +460,10 @@ window.addEventListener('beforeinstallprompt', function(e) { e.preventDefault();
         c.students.forEach(function(s) { var v = dm[s.id] || 'present'; if (v === 'absent_u') u.push(sfx(s, L)); else if (v === 'absent_j') j.push(sfx(s, L)); else if (v === 'late') { l.push(sfx(s, L)); if (ltm[s.id]) lts.push(sfx(s, L) + '=' + ltm[s.id].replace(':', '')); } });
         var na = u.length + j.length, p = curDate.split('/');
         var head = (na || l.length ? '📋 ' : '✅ ') + cname(c.className) + ' | ' + fa(parseInt(p[2], 10)) + ' ' + MN[parseInt(p[1], 10) - 1] + ' | ' + (na || l.length ? 'غایب ' + fa(na) + '، تأخیر ' + fa(l.length) : 'همه حاضر');
-        var code = 'DB2|' + L + '|' + c.className.replace(/[|\n]/g, ' ') + '|' + curDate + '|' + u.join(',') + '|' + j.join(',') + '|' + l.join(',') + '|' + (cfg.teacher || '').replace(/[|\n]/g, ' ') + (lts.length ? '|' + lts.join(',') : '');
+        /* بخش خالی با «-» پر می‌شود؛ وگرنه «||» ساخته می‌شود که در شاد/تلگرام علامت اسپویلر است و متن بین دو «||» مخفی می‌شود */
+        function F(a) { return a.length ? a.join(',') : '-'; }
+        var tn = (cfg.teacher || '').replace(/[|\n]/g, ' ').trim();
+        var code = 'DB2|' + L + '|' + c.className.replace(/[|\n]/g, ' ') + '|' + curDate + '|' + F(u) + '|' + F(j) + '|' + F(l) + '|' + (tn || (lts.length ? '-' : '')) + (lts.length ? '|' + lts.join(',') : '');
         return head + '\n' + code;
     }
     var pendingMsg = '', pendingMeta = null;

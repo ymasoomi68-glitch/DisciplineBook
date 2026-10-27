@@ -4333,7 +4333,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         });
         return out;
     }
-    function inList(t) { return String(t || '').split(',').map(function(x) { x = x.trim(); return x.indexOf('n:') === 0 ? x : inDigits(x); }).filter(Boolean); }
+    function inList(t) { return String(t || '').split(',').map(function(x) { x = x.trim(); return x.indexOf('n:') === 0 ? x : inDigits(x); }).filter(function(x) { return x && x !== '-'; }); }   // «-» = بخش خالی (جلوگیری از «||» اسپویلر)
 
     // همهٔ گزارش‌های داخل متن را پیدا می‌کند (فرمت کوتاه DB2 و فرمت قدیمی DB1)
     function inboxParse(text) {
@@ -4341,7 +4341,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         var re2 = /DB2\|([\d۰-۹٠-٩]+)\|([^|\n]+)\|([\d۰-۹٠-٩]{4}\/[\d۰-۹٠-٩]{2}\/[\d۰-۹٠-٩]{2})\|([^|\n]*)\|([^|\n]*)\|([^|\n]*)(?:\|([^\n]*))?/g;
         while ((m = re2.exec(text))) {
             var tail = (m[7] || '').split('|');
-            found.push({ v: 2, pos: m.index, L: parseInt(inDigits(m[1]), 10), c: m[2].trim(), d: inDigits(m[3]), u: inList(m[4]), j: inList(m[5]), l: inList(m[6]), t: (tail[0] || '').trim(), lt: inLateTimes(tail[1]) });
+            found.push({ v: 2, pos: m.index, L: parseInt(inDigits(m[1]), 10), c: m[2].trim(), d: inDigits(m[3]), u: inList(m[4]), j: inList(m[5]), l: inList(m[6]), t: ((tail[0] || '').trim() === '-' ? '' : (tail[0] || '').trim()), lt: inLateTimes(tail[1]) });
         }
         var re1 = /DB1\[([^\]]+)\]/g;
         while ((m = re1.exec(text))) {

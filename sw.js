@@ -2,7 +2,7 @@
    📱 Service Worker - دفتر انضباطی
    ═══════════════════════════════════════════════════ */
 
-var CACHE_NAME = 'discipline-book-v1.2.19-d036b4b8'; // [auto] این خط را make-version.js خودکار به‌روز می‌کند (بر اساس محتوای فایل‌ها)؛ دستی تغییرش ندهید
+var CACHE_NAME = 'discipline-book-v1.2.19-652de104'; // [auto] این خط را make-version.js خودکار به‌روز می‌کند (بر اساس محتوای فایل‌ها)؛ دستی تغییرش ندهید
 var CACHE_PREFIX = 'discipline-book-'; // فقط کش‌های همین برنامه؛ به کش برنامه‌های دیگرِ همین دامنه دست نمی‌زنیم
 var CACHE_FILES = [
     './',
