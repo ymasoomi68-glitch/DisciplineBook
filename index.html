@@ -5984,7 +5984,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
         var blob = new Blob(['\ufeff' + dataStr], { type: 'application/json;charset=utf-8' });
         var link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = 'class_manager_full_backup_' + new Date().toISOString().slice(0, 10) + '.json';
+        link.download = 'DisciplineBook_Backup_' + new Date().toISOString().slice(0, 10) + '.json';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -6336,7 +6336,7 @@ if (window.__CM_LOCKED) { if (document.readyState==='loading') document.addEvent
     /* ═══════════════════════════════════════════════════
        🔄 به‌روزرسانی از GitHub
        ═══════════════════════════════════════════════════ */
-    var APP_VERSION = '1.2.19';
+    var APP_VERSION = '1.2.20';
     var realLS = localStorage, UPD_KEY = 'cmupd_v1';   // ذخیره‌گاه حساب کاربر (نه localStorage خام)
 
     var UPD_REPO = 'ymasoomi68-glitch/Discipline', UPD_BRANCH = 'HEAD';

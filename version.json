@@ -1,6 +1,6 @@
 {
   "app": "discipline-book",
-  "version": "1.2.19",
+  "version": "1.2.20",
   "notes": [
     "رفع مشکل اسپویلر شدن بخش‌هایی از پیام ارسال به معاون در شاد (بخش‌های خالی گزارش دیگر «||» نمی‌سازند).",
     "پیام‌های قدیمی همچنان درست خوانده می‌شوند."
@@ -13,12 +13,12 @@
     "manifest-teacher.json"
   ],
   "sha256": {
-    "index.html": "994792cb0a6c249608d58dbf5bf55baa0156da904879db4c34445e1bcd0c6d2f",
-    "teacher.html": "4cd41266102b3b5d62782153e2189b9171dc146644ae455721e39a17260b84e6",
-    "sw.js": "202ff52120c14da85462a3c07c427960edb5073ab6c089ad73d64ae782621f4f",
-    "manifest.json": "d58ead88489a2b786cbe68165e9e4b0bafc325a35d65b611699800330d2daa31",
-    "manifest-teacher.json": "f86a18047a0e754acbf83a1150e2bbb00e55282f2927bdde45e6009c722cda87"
+    "index.html": "1126f8a74ea3e5f0c6d3de7153d2bdf07d93763b4ac133e4e2cf6484385957fb",
+    "teacher.html": "e84628d0fd2aed4541899a06fbe0b96cac633dcb7d3dd6e47d66ee4514af3fd8",
+    "sw.js": "cdedeefa5da88f76219d98873d33383135b127016052d4783570d585a7bf8e6a",
+    "manifest.json": "483f2f2c615a962114be6161018df42612cfd364a7db006b4e814a26a8ce5efa",
+    "manifest-teacher.json": "9a7861ab9c6c782b55c152a61a46fceab861a806ab54f97855a4481af8903d94"
   },
-  "cache": "discipline-book-v1.2.19-652de104",
-  "date": "2026-10-27"
+  "cache": "discipline-book-v1.2.20-a85f172e",
+  "date": "2026-10-30"
 }
